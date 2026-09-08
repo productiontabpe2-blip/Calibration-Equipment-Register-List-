@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ทะเบียนการสอบเทียบเครื่องมือ | FAS Calibration Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#152238;
+    --ink-soft:#425066;
+    --steel:#33506f;
+    --paper:#f2f4f2;
+    --panel:#ffffff;
+    --line:#d7dce0;
+    --line-soft:#e7eaec;
+    --amber:#c97a1a;
+    --amber-bg:#fbf0dd;
+    --red:#b23a32;
+    --red-bg:#fbe6e3;
+    --green:#2f7a4f;
+    --green-bg:#e4f2e8;
+    --grey-bg:#eef0f1;
+    --radius:7px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"IBM Plex Sans Thai","IBM Plex Sans",-apple-system,sans-serif;
+    font-size:14.5px;
+    line-height:1.5;
+  }
+  .mono{font-family:"IBM Plex Mono",monospace;}
+
+  /* ---------- header ---------- */
+  header.topbar{
+    background:var(--ink);
+    color:#fff;
+    padding:18px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    border-bottom:3px solid var(--amber);
+  }
+  header.topbar .title-block h1{
+    font-size:19px;
+    margin:0 0 2px 0;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  header.topbar .title-block p{
+    margin:0;
+    font-size:12.5px;
+    color:#aeb9c9;
+  }
+  header.topbar .meta{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-size:12.5px;
+    color:#c7d0dc;
+  }
+  header.topbar button#refreshBtn{
+    background:#22334f;
+    border:1px solid #3a4d6c;
+    color:#fff;
+    padding:8px 14px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    font-size:13px;
+    font-family:inherit;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:background .15s;
+  }
+  header.topbar button#refreshBtn:hover{ background:#2b3f5e; }
+  header.topbar button#refreshBtn:disabled{ opacity:.6; cursor:default; }
+  header.topbar button#addBtn{
+    background:var(--amber);
+    border:1px solid var(--amber);
+    color:#25190a;
+    padding:8px 14px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    font-size:13px;
+    font-weight:600;
+    font-family:inherit;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:filter .15s;
+  }
+  header.topbar button#addBtn:hover{ filter:brightness(1.06); }
+  .spin{ animation:spin 1s linear infinite; display:inline-block; }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+
+  main{ max-width:1400px; margin:0 auto; padding:22px 28px 60px; }
+
+  /* ---------- stat cards ---------- */
+  .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+  .stat-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    border-left:4px solid var(--steel);
+  }
+  .stat-card .num{ font-size:26px; font-weight:700; font-family:"IBM Plex Mono",monospace; line-height:1;}
+  .stat-card .label{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+  .stat-card.expired{ border-left-color:var(--red); }
+  .stat-card.expired .num{ color:var(--red); }
+  .stat-card.due{ border-left-color:var(--amber); }
+  .stat-card.due .num{ color:var(--amber); }
+  .stat-card.ok{ border-left-color:var(--green); }
+  .stat-card.ok .num{ color:var(--green); }
+
+  /* ---------- controls ---------- */
+  .controls{
+    display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;
+  }
+  .search-box{
+    flex:1; min-width:220px;
+    position:relative;
+  }
+  .search-box input{
+    width:100%;
+    padding:9px 12px 9px 34px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    font-size:13.5px;
+    font-family:inherit;
+    background:#fff;
+  }
+  .search-box svg{ position:absolute; left:11px; top:10px; opacity:.45; }
+  select#sortSelect{
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:#fff;
+    font-family:inherit;
+    font-size:13.5px;
+  }
+  .filter-toggle{
+    display:flex; gap:6px; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
+  }
+  .filter-toggle button{
+    background:#fff; border:none; padding:8px 12px; font-size:12.5px; cursor:pointer; font-family:inherit;
+    border-right:1px solid var(--line); color:var(--ink-soft);
+  }
+  .filter-toggle button:last-child{ border-right:none; }
+  .filter-toggle button.active{ background:var(--ink); color:#fff; }
+
+  /* ---------- category tabs ---------- */
+  .tabs{
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px;
+    scrollbar-width:thin;
+  }
+  .tabs::-webkit-scrollbar{ height:6px; }
+  .tabs::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+  .tab{
+    flex:0 0 auto;
+    padding:8px 14px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:999px;
+    font-size:12.8px;
+    cursor:pointer;
+    color:var(--ink-soft);
+    display:flex; align-items:center; gap:7px;
+    white-space:nowrap;
+  }
+  .tab .count{
+    background:var(--grey-bg); color:var(--ink-soft);
+    font-family:"IBM Plex Mono",monospace; font-size:11px;
+    padding:1px 6px; border-radius:999px;
+  }
+  .tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .tab.active .count{ background:#33455f; color:#fff; }
+
+  /* ---------- table ---------- */
+  .table-wrap{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:auto;
+    max-height:70vh;
+  }
+  table{ border-collapse:collapse; width:100%; min-width:1400px; }
+  thead th{
+    position:sticky; top:0; z-index:2;
+    background:#f6f7f7;
+    text-align:left;
+    font-weight:600;
+    font-size:12px;
+    color:var(--ink-soft);
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    border-right:1px solid var(--line-soft);
+    white-space:nowrap;
+  }
+  thead th:first-child{ position:sticky; left:0; z-index:3; }
+  tbody td{
+    padding:9px 12px;
+    border-bottom:1px solid var(--line-soft);
+    border-right:1px solid var(--line-soft);
+    font-size:13px;
+    vertical-align:top;
+  }
+  tbody tr:hover{ background:#fafbfa; }
+  tbody td:first-child{
+    font-family:"IBM Plex Mono",monospace; color:var(--ink-soft); font-size:12px;
+    background:inherit;
+  }
+  td.name-cell{ min-width:190px; font-weight:500; }
+  td.name-cell .cat-tag{
+    display:block; font-size:11px; color:var(--ink-soft); font-weight:400; margin-top:2px;
+  }
+  td.id-cell{ font-family:"IBM Plex Mono",monospace; font-size:12px; min-width:130px; }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 9px; border-radius:999px; font-size:12px; font-weight:600;
+    white-space:nowrap;
+  }
+  .badge .dot{ width:6px; height:6px; border-radius:50%; }
+  .badge.expired{ background:var(--red-bg); color:var(--red); }
+  .badge.expired .dot{ background:var(--red); }
+  .badge.due{ background:var(--amber-bg); color:var(--amber); }
+  .badge.due .dot{ background:var(--amber); }
+  .badge.ok{ background:var(--green-bg); color:var(--green); }
+  .badge.ok .dot{ background:var(--green); }
+  .badge.unknown{ background:var(--grey-bg); color:var(--ink-soft); }
+  .badge.unknown .dot{ background:#9aa4ae; }
+
+  tr.row-expired{ background:#fdf5f4; }
+  tr.row-due{ background:#fefaf3; }
+
+  .editable-cell{ min-width:170px; }
+  .editable-value{
+    display:flex; align-items:center; gap:6px; cursor:text;
+    min-height:22px;
+  }
+  .editable-value a{ color:var(--steel); text-decoration:none; font-size:12.5px; word-break:break-all; }
+  .editable-value a:hover{ text-decoration:underline; }
+  .editable-value .placeholder{ color:#b7bec5; font-size:12.5px; }
+  .edit-icon{ opacity:0; font-size:11px; color:var(--ink-soft); transition:opacity .1s; }
+  .editable-value:hover .edit-icon{ opacity:1; }
+  .edit-row{ display:flex; gap:6px; align-items:center; }
+  .edit-row input{
+    flex:1; padding:6px 8px; border:1px solid var(--steel); border-radius:5px;
+    font-family:inherit; font-size:12.5px; min-width:120px;
+  }
+  .edit-row button{
+    border:none; border-radius:5px; padding:6px 9px; font-size:11.5px; cursor:pointer; font-family:inherit;
+  }
+  .edit-row .save-btn{ background:var(--ink); color:#fff; }
+  .edit-row .cancel-btn{ background:var(--grey-bg); color:var(--ink-soft); }
+  .save-flash{ font-size:11px; color:var(--green); }
+
+  td.remark-cell{ min-width:150px; color:var(--ink-soft); font-size:12.5px; }
+
+  .edit-row-btn{
+    background:#fff; border:1px solid var(--line); border-radius:5px;
+    width:26px; height:26px; cursor:pointer; color:var(--steel); font-size:13px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .edit-row-btn:hover{ background:var(--grey-bg); border-color:var(--steel); }
+
+  .empty-state, .error-state, .loading-state{
+    padding:60px 20px; text-align:center; color:var(--ink-soft);
+  }
+  .error-state{ color:var(--red); }
+  .error-state code{ background:var(--red-bg); padding:2px 6px; border-radius:4px; font-size:12px; }
+
+  footer.note{
+    margin-top:18px; font-size:12px; color:var(--ink-soft); line-height:1.7;
+  }
+  footer.note strong{ color:var(--ink); }
+
+  @media (max-width:760px){
+    .stats{ grid-template-columns:repeat(2,1fr); }
+    header.topbar{ padding:14px 16px; }
+    main{ padding:16px; }
+  }
+
+  /* ---------- modal: เพิ่มอุปกรณ์ ---------- */
+  .modal-backdrop{
+    display:none;
+    position:fixed; inset:0; background:rgba(21,34,56,.55);
+    z-index:50; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-backdrop.open{ display:flex; }
+  .modal-box{
+    background:#fff; border-radius:10px; width:100%; max-width:720px;
+    max-height:88vh; display:flex; flex-direction:column; overflow:hidden;
+    border-top:4px solid var(--amber);
+  }
+  .modal-head{
+    padding:18px 22px; border-bottom:1px solid var(--line-soft);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .modal-head h2{ margin:0; font-size:16.5px; font-weight:600; }
+  .modal-head button{
+    background:none; border:none; font-size:20px; cursor:pointer; color:var(--ink-soft); line-height:1;
+  }
+  .modal-body{ padding:20px 22px; overflow-y:auto; }
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; }
+  .form-field{ display:flex; flex-direction:column; gap:5px; }
+  .form-field.full{ grid-column:1 / -1; }
+  .form-field label{ font-size:12.5px; color:var(--ink-soft); font-weight:500; }
+  .form-field label .req{ color:var(--red); }
+  .form-field input, .form-field select{
+    padding:9px 10px; border:1px solid var(--line); border-radius:6px;
+    font-family:inherit; font-size:13.5px; background:#fff;
+  }
+  .form-field input:focus, .form-field select:focus{ outline:2px solid #cddaea; border-color:var(--steel); }
+  .form-field select:disabled{ background:var(--grey-bg); color:var(--ink-soft); cursor:not-allowed; }
+  .modal-foot{
+    padding:16px 22px; border-top:1px solid var(--line-soft);
+    display:flex; justify-content:flex-end; gap:10px;
+  }
+  .btn-secondary{
+    background:var(--grey-bg); border:1px solid var(--line); color:var(--ink-soft);
+    padding:9px 16px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:13.5px;
+  }
+  .btn-primary{
+    background:var(--ink); border:1px solid var(--ink); color:#fff;
+    padding:9px 18px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:600;
+  }
+  .btn-primary:disabled{ opacity:.6; cursor:default; }
+  .form-msg{ font-size:12.5px; margin-top:10px; min-height:16px; }
+  .form-msg.error{ color:var(--red); }
+  .form-msg.success{ color:var(--green); }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:12px 20px; border-radius:8px;
+    font-size:13px; z-index:60; opacity:0; pointer-events:none; transition:all .25s;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="title-block">
+    <h1>ทะเบียนการสอบเทียบเครื่องมือ</h1>
+    <p>Calibration Equipment Register List — Fabrication Section (FAS)</p>
+  </div>
+  <div class="meta">
+    <span id="syncTime">ยังไม่ได้ซิงค์ข้อมูล</span>
+    <button id="addBtn" onclick="openAddModal()">
+      <span>&#65291;</span> เพิ่มอุปกรณ์ใหม่
+    </button>
+    <button id="refreshBtn" onclick="loadData()">
+      <span id="refreshIcon">&#8635;</span> รีเฟรชข้อมูล
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <section class="stats">
+    <div class="stat-card">
+      <div class="num" id="statTotal">–</div>
+      <div class="label">เครื่องมือทั้งหมด</div>
+    </div>
+    <div class="stat-card expired">
+      <div class="num" id="statExpired">–</div>
+      <div class="label">หมดอายุแล้ว</div>
+    </div>
+    <div class="stat-card due">
+      <div class="num" id="statDue">–</div>
+      <div class="label">ใกล้ครบกำหนด (≤ 30 วัน)</div>
+    </div>
+    <div class="stat-card ok">
+      <div class="num" id="statOk">–</div>
+      <div class="label">ปกติ</div>
+    </div>
+  </section>
+
+  <div class="tabs" id="tabsWrap"></div>
+
+  <div class="controls">
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchInput" type="text" placeholder="ค้นหา: ชื่อเครื่องมือ / เลขทะเบียน / ยี่ห้อ / ผู้ใช้งาน ..." oninput="renderTable()">
+    </div>
+    <select id="sortSelect" onchange="renderTable()">
+      <option value="remaining_asc">เรียง: ใกล้หมดอายุก่อน</option>
+      <option value="remaining_desc">เรียง: หมดอายุช้าสุดก่อน</option>
+      <option value="name_asc">เรียง: ชื่อเครื่องมือ (ก-ฮ)</option>
+      <option value="expire_asc">เรียง: วันหมดอายุ</option>
+    </select>
+    <div class="filter-toggle" id="statusFilter">
+      <button class="active" data-status="all" onclick="setStatusFilter('all')">ทั้งหมด</button>
+      <button data-status="expired" onclick="setStatusFilter('expired')">หมดอายุ</button>
+      <button data-status="due" onclick="setStatusFilter('due')">ใกล้ครบกำหนด</button>
+      <button data-status="ok" onclick="setStatusFilter('ok')">ปกติ</button>
+    </div>
+  </div>
+
+  <div class="table-wrap" id="tableWrap">
+    <div class="loading-state">กำลังโหลดข้อมูลจาก Google Sheet ...</div>
+  </div>
+
+  <footer class="note">
+    <strong>หมายเหตุการใช้งาน Link เอกสาร (AD):</strong>
+    หากไฟล์เอกสารอยู่บนเว็บ/ไฟล์เซิร์ฟเวอร์ภายในบริษัทที่มี URL แบบ <span class="mono">http://...</span> จะสามารถคลิกเปิดจากหน้านี้ได้เมื่อเปิดผ่านเครือข่ายภายใน (Local Server) เท่านั้น
+    ส่วน Path แบบ UNC <span class="mono">\\server\share\file.pdf</span> เบราว์เซอร์จะไม่อนุญาตให้เปิดโดยตรงด้วยเหตุผลด้านความปลอดภัย — แนะนำให้แปลงเป็น URL ผ่าน Web Server (เช่น IIS) ก่อน คลิกที่ช่อง "Link เอกสาร" หรือ "เลขที่ใบรับรอง" ในตารางเพื่อแก้ไข ระบบจะบันทึกกลับเข้า Google Sheet ทันที
+  </footer>
+
+</main>
+
+<!-- ---------- Modal: เพิ่มอุปกรณ์ใหม่ ---------- -->
+<div class="modal-backdrop" id="addModalBackdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2 id="modalTitle">เพิ่มอุปกรณ์ใหม่</h2>
+      <button onclick="closeAddModal()" aria-label="ปิด">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>หมวดหมู่ <span class="req">*</span></label>
+          <select id="f_category" onchange="onCategorySelectChange()"></select>
+        </div>
+        <div class="form-field full" id="newCategoryWrap" style="display:none;">
+          <label>ชื่อหมวดหมู่ใหม่ <span class="req">*</span></label>
+          <input id="f_newCategory" type="text" placeholder="เช่น Vernier Caliper (ระบบจะสร้าง Sheet นี้ให้อัตโนมัติ)">
+        </div>
+        <div class="form-field full">
+          <label>ชื่อเครื่องมือ <span class="req">*</span></label>
+          <input id="f_name" type="text" placeholder="เช่น Digital Recorder (Temperature)">
+        </div>
+        <div class="form-field">
+          <label>เลขทะเบียน (ID Number)</label>
+          <input id="f_idNumber" type="text">
+        </div>
+        <div class="form-field">
+          <label>เลขเครื่องมือ (Serial No.)</label>
+          <input id="f_serialNo" type="text">
+        </div>
+        <div class="form-field">
+          <label>ยี่ห้อ (Brand)</label>
+          <input id="f_brand" type="text">
+        </div>
+        <div class="form-field">
+          <label>รุ่น (Model)</label>
+          <input id="f_model" type="text">
+        </div>
+        <div class="form-field">
+          <label>ผู้ใช้งาน (User)</label>
+          <input id="f_user" type="text" value="FAS">
+        </div>
+        <div class="form-field">
+          <label>สถานที่ใช้ (Location)</label>
+          <input id="f_location" type="text">
+        </div>
+        <div class="form-field">
+          <label>ความถี่สอบเทียบ</label>
+          <input id="f_internal" type="text" placeholder="เช่น 6 Months">
+        </div>
+        <div class="form-field">
+          <label>ช่วงการใช้งาน (Range)</label>
+          <input id="f_range" type="text">
+        </div>
+        <div class="form-field">
+          <label>ค่าความละเอียด (Resolution)</label>
+          <input id="f_resolution" type="text">
+        </div>
+        <div class="form-field">
+          <label>เกณฑ์การยอมรับ (Tolerance)</label>
+          <input id="f_tolerance" type="text">
+        </div>
+        <div class="form-field">
+          <label>วันที่สอบเทียบ (Cal. Date)</label>
+          <input id="f_calDate" type="date">
+        </div>
+        <div class="form-field">
+          <label>วันหมดอายุ (Expire Date)</label>
+          <input id="f_expireDate" type="date">
+        </div>
+        <div class="form-field">
+          <label>สอบเทียบโดย</label>
+          <input id="f_calibratedBy" type="text">
+        </div>
+        <div class="form-field">
+          <label>เลขที่ใบรับรอง</label>
+          <input id="f_certificateNo" type="text">
+        </div>
+        <div class="form-field">
+          <label>อุปกรณ์สอบเทียบหลัก</label>
+          <input id="f_masterEquipment" type="text">
+        </div>
+        <div class="form-field">
+          <label>Link เอกสาร (AD)</label>
+          <input id="f_adLink" type="text" placeholder="https://...">
+        </div>
+        <div class="form-field full">
+          <label>หมายเหตุ (Remark)</label>
+          <input id="f_remark" type="text">
+        </div>
+      </div>
+      <div class="form-msg" id="formMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary" onclick="closeAddModal()">ยกเลิก</button>
+      <button class="btn-primary" id="submitAddBtn" onclick="submitAddForm()">บันทึกอุปกรณ์</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============== ตั้งค่าการเชื่อมต่อ ============== */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqdiar3oN8Jui5X9LIhEiD9QIWkcZ-YTrvytch0NgJt3hvW3aIKr5BrxO8449Dt_7_/exec';
+const DUE_SOON_DAYS = 30;
+
+let RAW_DATA = {};        // { category: [items] }
+let CATEGORY_LIST = [];
+let CURRENT_TAB = 'all';
+let STATUS_FILTER = 'all';
+let EDIT_MODE = false;          // false = เพิ่มใหม่, true = แก้ไขของเดิม
+let EDIT_TARGET = null;         // { category, rowNumber }
+
+// รายชื่อหมวดหมู่สำรอง (ตรงกับ SHEET_CATEGORIES ใน Code.gs) ใช้กรณีข้อมูลยังโหลดไม่เสร็จ
+const DEFAULT_CATEGORIES = [
+  'Recorder-Pressure Gauge',
+  'Welding Machine',
+  'Digital Level',
+  'Portable Welding Rod ตามเซอ',
+  'Portable Welding Rod แก้ไข',
+  'Digital +elcometer',
+  'Torque Wrench',
+  'เครื่องวัดระดับ',
+  'Blasting'
+];
+
+/* ============== โหลดข้อมูล ============== */
+async function loadData(){
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  btn.disabled = true;
+  icon.classList.add('spin');
+  document.getElementById('tableWrap').innerHTML = '<div class="loading-state">กำลังโหลดข้อมูลจาก Google Sheet ...</div>';
+
+  try{
+    const res = await fetch(SCRIPT_URL + '?action=list', { method:'GET' });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
+
+    RAW_DATA = json.data;
+    CATEGORY_LIST = Object.keys(RAW_DATA);
+    document.getElementById('syncTime').textContent =
+      'ซิงค์ล่าสุด: ' + new Date(json.generatedAt).toLocaleString('th-TH');
+
+    buildTabs();
+    renderStats();
+    renderTable();
+    populateCategorySelect();
+  }catch(err){
+    document.getElementById('tableWrap').innerHTML =
+      '<div class="error-state">เชื่อมต่อ Google Apps Script ไม่สำเร็จ<br><br>' +
+      '<code>' + String(err.message || err) + '</code><br><br>' +
+      'ตรวจสอบว่า Deploy เป็น Web App แบบ "Anyone" และวางโค้ด Code.gs ถูกต้องแล้ว</div>';
+  }finally{
+    btn.disabled = false;
+    icon.classList.remove('spin');
+  }
+}
+
+/* ============== สถานะวันหมดอายุ ============== */
+function getStatus(item){
+  let days = item.remainingDays;
+  if(days === '' || days === null || typeof days === 'undefined' || isNaN(days)){
+    if(item.expireDate){
+      const exp = new Date(item.expireDate);
+      const today = new Date(); today.setHours(0,0,0,0);
+      if(!isNaN(exp)) days = Math.round((exp - today) / 86400000);
+    }
+  }
+  days = Math.round(Number(days));
+  if(isNaN(days)) return { key:'unknown', label:'ไม่ทราบ', days:null };
+  if(days < 0) return { key:'expired', label:'หมดอายุ ' + Math.abs(days) + ' วันแล้ว', days };
+  if(days <= DUE_SOON_DAYS) return { key:'due', label:'เหลือ ' + days + ' วัน', days };
+  return { key:'ok', label:'เหลือ ' + days + ' วัน', days };
+}
+
+function flattenAll(){
+  const list = [];
+  CATEGORY_LIST.forEach(cat=>{
+    (RAW_DATA[cat] || []).forEach(item=>{
+      list.push(Object.assign({ __category: cat }, item));
+    });
+  });
+  return list;
+}
+
+/* ============== สรุปสถิติ ============== */
+function renderStats(){
+  const all = flattenAll();
+  let expired=0, due=0, ok=0;
+  all.forEach(it=>{
+    const s = getStatus(it).key;
+    if(s==='expired') expired++;
+    else if(s==='due') due++;
+    else if(s==='ok') ok++;
+  });
+  document.getElementById('statTotal').textContent = all.length;
+  document.getElementById('statExpired').textContent = expired;
+  document.getElementById('statDue').textContent = due;
+  document.getElementById('statOk').textContent = ok;
+}
+
+/* ============== แท็บหมวดหมู่ ============== */
+function buildTabs(){
+  const wrap = document.getElementById('tabsWrap');
+  const all = flattenAll();
+  let html = '<div class="tab' + (CURRENT_TAB==='all'?' active':'') + '" onclick="setTab(\'all\')">ทั้งหมด <span class="count">'+all.length+'</span></div>';
+  CATEGORY_LIST.forEach(cat=>{
+    const count = (RAW_DATA[cat]||[]).length;
+    html += '<div class="tab' + (CURRENT_TAB===cat?' active':'') + '" onclick="setTab(\''+escAttr(cat)+'\')">'+esc(cat)+' <span class="count">'+count+'</span></div>';
+  });
+  wrap.innerHTML = html;
+}
+function setTab(cat){ CURRENT_TAB = cat; buildTabs(); renderTable(); }
+function setStatusFilter(s){
+  STATUS_FILTER = s;
+  document.querySelectorAll('#statusFilter button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.status === s);
+  });
+  renderTable();
+}
+
+/* ============== ตารางข้อมูล ============== */
+function renderTable(){
+  let items = CURRENT_TAB === 'all' ? flattenAll() :
+    (RAW_DATA[CURRENT_TAB] || []).map(it => Object.assign({__category:CURRENT_TAB}, it));
+
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if(q){
+    items = items.filter(it =>
+      [it.equipmentName, it.idNumber, it.serialNo, it.brand, it.model, it.user, it.location, it.certificateNo]
+        .filter(Boolean).join(' ').toLowerCase().includes(q)
+    );
+  }
+
+  if(STATUS_FILTER !== 'all'){
+    items = items.filter(it => getStatus(it).key === STATUS_FILTER);
+  }
+
+  const sortMode = document.getElementById('sortSelect').value;
+  items = items.slice().sort((a,b)=>{
+    if(sortMode === 'remaining_asc') return (getStatus(a).days ?? 99999) - (getStatus(b).days ?? 99999);
+    if(sortMode === 'remaining_desc') return (getStatus(b).days ?? -99999) - (getStatus(a).days ?? -99999);
+    if(sortMode === 'name_asc') return String(a.equipmentName).localeCompare(String(b.equipmentName), 'th');
+    if(sortMode === 'expire_asc') return String(a.expireDate).localeCompare(String(b.expireDate));
+    return 0;
+  });
+
+  const wrap = document.getElementById('tableWrap');
+  if(items.length === 0){
+    wrap.innerHTML = '<div class="empty-state">ไม่พบรายการเครื่องมือที่ตรงกับเงื่อนไข</div>';
+    return;
+  }
+
+  let rows = items.map(it => renderRow(it)).join('');
+
+  wrap.innerHTML =
+    '<table><thead><tr>' +
+      '<th></th>' +
+      '<th>ลำดับ</th>' +
+      '<th>รหัส / เลขทะเบียน</th>' +
+      '<th>ชื่อเครื่องมือ</th>' +
+      '<th>ยี่ห้อ / รุ่น</th>' +
+      '<th>ผู้ใช้ / สถานที่</th>' +
+      '<th>วันที่สอบเทียบ</th>' +
+      '<th>วันหมดอายุ</th>' +
+      '<th>สถานะ</th>' +
+      '<th>เลขที่ใบรับรอง</th>' +
+      '<th>Link เอกสาร (AD)</th>' +
+      '<th>หมายเหตุ</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function renderRow(it){
+  const st = getStatus(it);
+  const rowClass = st.key === 'expired' ? 'row-expired' : (st.key === 'due' ? 'row-due' : '');
+
+  return '<tr class="'+rowClass+'">' +
+    '<td><button class="edit-row-btn" title="แก้ไขรายการนี้" onclick="openEditModal(\''+escAttr(it.__category)+'\','+it.rowNumber+')">&#9998;</button></td>' +
+    '<td>'+esc(it.item || '')+'</td>' +
+    '<td class="id-cell">'+esc(it.idNumber || it.serialNo || '')+'</td>' +
+    '<td class="name-cell">'+esc(it.equipmentName || '')+'<span class="cat-tag">'+esc(it.__category)+(it.status?(' · '+esc(it.status)):'')+'</span></td>' +
+    '<td>'+esc(it.brand||'')+(it.model?(' / '+esc(it.model)):'')+'</td>' +
+    '<td>'+esc(it.user||'')+(it.location?('<br><span class="cat-tag">'+esc(it.location)+'</span>'):'')+'</td>' +
+    '<td class="mono">'+esc(it.calDate||'-')+'</td>' +
+    '<td class="mono">'+esc(it.expireDate||'-')+'</td>' +
+    '<td><span class="badge '+st.key+'"><span class="dot"></span>'+esc(st.label)+'</span></td>' +
+    editableCell(it.__category, it.rowNumber, 'certificateNo', it.certificateNo, 'text', 'ระบุเลขที่ใบรับรอง') +
+    editableCell(it.__category, it.rowNumber, 'adLink', it.adLink, 'link', 'วาง Link เอกสาร') +
+    '<td class="remark-cell">'+esc(it.remark||'')+'</td>' +
+  '</tr>';
+}
+
+/* ============== เซลล์แก้ไขได้ (เลขที่ใบรับรอง / Link เอกสาร) ============== */
+function editableCell(category, rowNumber, field, value, kind, placeholder){
+  const cellId = 'cell_' + field + '_' + rowNumber + '_' + slug(category);
+  const displayValue = value ? esc(value) : '';
+  let display;
+  if(kind === 'link' && value){
+    display = '<a href="'+escAttr(value)+'" target="_blank" rel="noopener" title="เปิดไฟล์เอกสาร">&#128279; '+shorten(value)+'</a>';
+  }else if(value){
+    display = '<span class="mono">'+displayValue+'</span>';
+  }else{
+    display = '<span class="placeholder">'+esc(placeholder)+'</span>';
+  }
+
+  return '<td class="editable-cell" id="'+cellId+'">' +
+    '<div class="editable-value" onclick="startEdit(\''+cellId+'\',\''+escAttr(category)+'\','+rowNumber+',\''+field+'\',\''+escAttr(value||'')+'\',\''+kind+'\')">' +
+      display + '<span class="edit-icon">&#9998;</span>' +
+    '</div>' +
+  '</td>';
+}
+
+function startEdit(cellId, category, rowNumber, field, currentValue, kind){
+  const cell = document.getElementById(cellId);
+  cell.innerHTML =
+    '<div class="edit-row">' +
+      '<input type="text" id="input_'+cellId+'" value="'+escAttr(currentValue)+'" placeholder="'+(kind==='link'?'https://...':'')+'">' +
+      '<button class="save-btn" onclick="saveEdit(\''+cellId+'\',\''+category+'\','+rowNumber+',\''+field+'\',\''+kind+'\')">บันทึก</button>' +
+      '<button class="cancel-btn" onclick="renderTable()">ยกเลิก</button>' +
+    '</div>';
+  document.getElementById('input_'+cellId).focus();
+}
+
+async function saveEdit(cellId, category, rowNumber, field, kind){
+  const input = document.getElementById('input_'+cellId);
+  const value = input.value.trim();
+  const cell = document.getElementById(cellId);
+  cell.innerHTML = '<div class="save-flash">กำลังบันทึก...</div>';
+
+  try{
+    const res = await fetch(SCRIPT_URL, {
+      method:'POST',
+      headers: { 'Content-Type':'text/plain;charset=utf-8' }, // หลีกเลี่ยง CORS preflight
+      body: JSON.stringify({ action:'updateField', category, rowNumber, field, value })
+    });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+
+    // อัปเดตข้อมูลใน memory
+    const arr = RAW_DATA[category] || [];
+    const target = arr.find(r => r.rowNumber === rowNumber);
+    if(target) target[field] = value;
+
+    renderTable();
+  }catch(err){
+    cell.innerHTML = '<div class="save-flash" style="color:var(--red)">บันทึกไม่สำเร็จ: '+esc(String(err.message||err))+'</div>';
+    setTimeout(renderTable, 2200);
+  }
+}
+
+/* ============== เพิ่มอุปกรณ์ใหม่ ============== */
+function populateCategorySelect(){
+  const sel = document.getElementById('f_category');
+  const currentValue = sel.value;
+  const list = CATEGORY_LIST.length ? CATEGORY_LIST : DEFAULT_CATEGORIES;
+  let html = list.map(c => '<option value="'+escAttr(c)+'">'+esc(c)+'</option>').join('');
+  html += '<option value="__new__">&#65291; เพิ่มหมวดหมู่ใหม่...</option>';
+  sel.innerHTML = html;
+  if(CURRENT_TAB !== 'all' && list.includes(CURRENT_TAB)){
+    sel.value = CURRENT_TAB;
+  }else if(currentValue && (list.includes(currentValue) || currentValue === '__new__')){
+    sel.value = currentValue;
+  }
+  onCategorySelectChange();
+}
+
+function openAddModal(){
+  EDIT_MODE = false;
+  EDIT_TARGET = null;
+  document.getElementById('modalTitle').textContent = 'เพิ่มอุปกรณ์ใหม่';
+  document.getElementById('submitAddBtn').textContent = 'บันทึกอุปกรณ์';
+  document.getElementById('f_category').disabled = false;
+  populateCategorySelect(); // โหลดรายชื่อหมวดหมู่ล่าสุดทุกครั้งที่เปิดฟอร์ม กันกรณีข้อมูลยังโหลดไม่เสร็จตอนหน้าเว็บเปิดขึ้นมา
+  document.getElementById('formMsg').textContent = '';
+  document.getElementById('formMsg').className = 'form-msg';
+  document.getElementById('addModalBackdrop').classList.add('open');
+  document.getElementById('f_name').focus();
+}
+
+function openEditModal(category, rowNumber){
+  const item = (RAW_DATA[category] || []).find(r => r.rowNumber === rowNumber);
+  if(!item){ showToast('ไม่พบรายการนี้ ลองรีเฟรชข้อมูลใหม่อีกครั้ง'); return; }
+
+  EDIT_MODE = true;
+  EDIT_TARGET = { category, rowNumber };
+
+  populateCategorySelect();
+  const sel = document.getElementById('f_category');
+  sel.value = category;
+  sel.disabled = true; // แก้ไขได้เฉพาะข้อมูล ไม่ย้ายหมวดหมู่
+  document.getElementById('newCategoryWrap').style.display = 'none';
+
+  document.getElementById('f_name').value = item.equipmentName || '';
+  document.getElementById('f_idNumber').value = item.idNumber || '';
+  document.getElementById('f_serialNo').value = item.serialNo || '';
+  document.getElementById('f_brand').value = item.brand || '';
+  document.getElementById('f_model').value = item.model || '';
+  document.getElementById('f_user').value = item.user || '';
+  document.getElementById('f_location').value = item.location || '';
+  document.getElementById('f_internal').value = item.internal || '';
+  document.getElementById('f_range').value = item.range || '';
+  document.getElementById('f_resolution').value = item.resolution || '';
+  document.getElementById('f_tolerance').value = item.tolerance || '';
+  document.getElementById('f_calDate').value = item.calDate || '';
+  document.getElementById('f_expireDate').value = item.expireDate || '';
+  document.getElementById('f_calibratedBy').value = item.calibratedBy || '';
+  document.getElementById('f_certificateNo').value = item.certificateNo || '';
+  document.getElementById('f_masterEquipment').value = item.masterEquipment || '';
+  document.getElementById('f_adLink').value = item.adLink || '';
+  document.getElementById('f_remark').value = item.remark || '';
+
+  document.getElementById('modalTitle').textContent = 'แก้ไขข้อมูล: ' + (item.equipmentName || '');
+  document.getElementById('submitAddBtn').textContent = 'บันทึกการแก้ไข';
+  document.getElementById('formMsg').textContent = '';
+  document.getElementById('formMsg').className = 'form-msg';
+  document.getElementById('addModalBackdrop').classList.add('open');
+  document.getElementById('f_name').focus();
+}
+
+function closeAddModal(){
+  document.getElementById('addModalBackdrop').classList.remove('open');
+  ['f_name','f_idNumber','f_serialNo','f_brand','f_model','f_location','f_internal','f_range',
+   'f_resolution','f_tolerance','f_calDate','f_expireDate','f_calibratedBy','f_certificateNo',
+   'f_masterEquipment','f_adLink','f_remark','f_newCategory'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('f_user').value = 'FAS';
+  document.getElementById('newCategoryWrap').style.display = 'none';
+  document.getElementById('f_category').disabled = false;
+  EDIT_MODE = false;
+  EDIT_TARGET = null;
+}
+
+function onCategorySelectChange(){
+  const sel = document.getElementById('f_category');
+  const wrap = document.getElementById('newCategoryWrap');
+  wrap.style.display = (sel.value === '__new__') ? 'block' : 'none';
+  if(sel.value === '__new__') document.getElementById('f_newCategory').focus();
+}
+
+async function submitAddForm(){
+  const msg = document.getElementById('formMsg');
+  const sel = document.getElementById('f_category');
+  const category = EDIT_MODE
+    ? EDIT_TARGET.category
+    : (sel.value === '__new__' ? document.getElementById('f_newCategory').value.trim() : sel.value);
+  const name = document.getElementById('f_name').value.trim();
+
+  if(!category){ msg.textContent = 'กรุณาเลือกหรือระบุชื่อหมวดหมู่'; msg.className='form-msg error'; return; }
+  if(!name){ msg.textContent = 'กรุณากรอกชื่อเครื่องมือ'; msg.className='form-msg error'; return; }
+
+  const btn = document.getElementById('submitAddBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  msg.textContent = ''; msg.className = 'form-msg';
+
+  const fields = {
+    name,
+    idNumber: document.getElementById('f_idNumber').value.trim(),
+    serialNo: document.getElementById('f_serialNo').value.trim(),
+    brand: document.getElementById('f_brand').value.trim(),
+    model: document.getElementById('f_model').value.trim(),
+    user: document.getElementById('f_user').value.trim(),
+    location: document.getElementById('f_location').value.trim(),
+    internal: document.getElementById('f_internal').value.trim(),
+    range: document.getElementById('f_range').value.trim(),
+    resolution: document.getElementById('f_resolution').value.trim(),
+    tolerance: document.getElementById('f_tolerance').value.trim(),
+    calDate: document.getElementById('f_calDate').value,
+    expireDate: document.getElementById('f_expireDate').value,
+    calibratedBy: document.getElementById('f_calibratedBy').value.trim(),
+    certificateNo: document.getElementById('f_certificateNo').value.trim(),
+    masterEquipment: document.getElementById('f_masterEquipment').value.trim(),
+    adLink: document.getElementById('f_adLink').value.trim(),
+    remark: document.getElementById('f_remark').value.trim()
+  };
+
+  const payload = EDIT_MODE
+    ? { action:'updateItem', category, rowNumber: EDIT_TARGET.rowNumber, fields }
+    : { action:'addItem', category, fields };
+
+  try{
+    const res = await fetch(SCRIPT_URL, {
+      method:'POST',
+      headers: { 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+
+    const wasEdit = EDIT_MODE;
+    closeAddModal();
+    showToast(wasEdit ? ('แก้ไข "'+name+'" เรียบร้อยแล้ว') : ('เพิ่ม "'+name+'" เรียบร้อยแล้ว'));
+    await loadData();
+    setTab(category);
+  }catch(err){
+    msg.textContent = 'บันทึกไม่สำเร็จ: ' + (err.message || err);
+    msg.className = 'form-msg error';
+  }finally{
+    btn.disabled = false; btn.textContent = EDIT_MODE ? 'บันทึกการแก้ไข' : 'บันทึกอุปกรณ์';
+  }
+}
+
+function showToast(text){
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 2600);
+}
+
+/* ============== helpers ============== */
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function escAttr(s){ return esc(s).replace(/'/g, '&#39;'); }
+function slug(s){ return String(s).replace(/[^a-zA-Z0-9ก-๙]/g,'_'); }
+function shorten(url){
+  const s = String(url);
+  return s.length > 34 ? s.slice(0,31) + '...' : s;
+}
+
+populateCategorySelect();
+loadData();
+</script>
+
+</body>
+</html>
