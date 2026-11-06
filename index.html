@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ทะเบียนการสอบเทียบเครื่องมือ | FAS Calibration Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#152238;
+    --ink-soft:#425066;
+    --steel:#33506f;
+    --paper:#f2f4f2;
+    --panel:#ffffff;
+    --line:#d7dce0;
+    --line-soft:#e7eaec;
+    --amber:#c97a1a;
+    --amber-bg:#fbf0dd;
+    --red:#b23a32;
+    --red-bg:#fbe6e3;
+    --green:#2f7a4f;
+    --green-bg:#e4f2e8;
+    --grey-bg:#eef0f1;
+    --radius:7px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Sarabun","TH Sarabun New",sans-serif;
+    font-size:16px;
+    line-height:1.45;
+  }
+  .mono{font-family:"Sarabun",sans-serif; font-variant-numeric:tabular-nums;}
+
+  /* ---------- header ---------- */
+  header.topbar{
+    background:var(--ink);
+    color:#fff;
+    padding:18px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    border-bottom:3px solid var(--amber);
+  }
+  header.topbar .title-block h1{
+    font-size:19px;
+    margin:0 0 2px 0;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  header.topbar .title-block p{
+    margin:0;
+    font-size:12.5px;
+    color:#aeb9c9;
+  }
+  header.topbar .meta{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-size:12.5px;
+    color:#c7d0dc;
+  }
+  header.topbar button#refreshBtn{
+    background:#22334f;
+    border:1px solid #3a4d6c;
+    color:#fff;
+    padding:8px 14px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    font-size:13px;
+    font-family:inherit;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:background .15s;
+  }
+  header.topbar button#refreshBtn:hover{ background:#2b3f5e; }
+  header.topbar button#refreshBtn:disabled{ opacity:.6; cursor:default; }
+  header.topbar button#addBtn{
+    background:var(--amber);
+    border:1px solid var(--amber);
+    color:#25190a;
+    padding:8px 14px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    font-size:13px;
+    font-weight:600;
+    font-family:inherit;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:filter .15s;
+  }
+  header.topbar button#addBtn:hover{ filter:brightness(1.06); }
+  .spin{ animation:spin 1s linear infinite; display:inline-block; }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+
+  main{ max-width:1400px; margin:0 auto; padding:22px 28px 60px; }
+
+  /* ---------- stat cards ---------- */
+  .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+  .stat-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    border-left:4px solid var(--steel);
+  }
+  .stat-card .num{ font-size:26px; font-weight:700; font-family:"Sarabun",sans-serif; font-variant-numeric:tabular-nums; line-height:1;}
+  .stat-card .label{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+  .stat-card.expired{ border-left-color:var(--red); }
+  .stat-card.expired .num{ color:var(--red); }
+  .stat-card.due{ border-left-color:var(--amber); }
+  .stat-card.due .num{ color:var(--amber); }
+  .stat-card.ok{ border-left-color:var(--green); }
+  .stat-card.ok .num{ color:var(--green); }
+
+  /* ---------- controls ---------- */
+  .controls{
+    display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;
+  }
+  .search-box{
+    flex:1; min-width:220px;
+    position:relative;
+  }
+  .search-box input{
+    width:100%;
+    padding:9px 12px 9px 34px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    font-size:13.5px;
+    font-family:inherit;
+    background:#fff;
+  }
+  .search-box svg{ position:absolute; left:11px; top:10px; opacity:.45; }
+  select#sortSelect{
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:#fff;
+    font-family:inherit;
+    font-size:13.5px;
+  }
+  .filter-toggle{
+    display:flex; gap:6px; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
+  }
+  .filter-toggle button{
+    background:#fff; border:none; padding:8px 12px; font-size:12.5px; cursor:pointer; font-family:inherit;
+    border-right:1px solid var(--line); color:var(--ink-soft);
+  }
+  .filter-toggle button:last-child{ border-right:none; }
+  .filter-toggle button.active{ background:var(--ink); color:#fff; }
+
+  /* ---------- category tabs ---------- */
+  .tabs{
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px;
+    scrollbar-width:thin;
+  }
+  .tabs::-webkit-scrollbar{ height:6px; }
+  .tabs::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+  .tab{
+    flex:0 0 auto;
+    padding:8px 14px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:999px;
+    font-size:12.8px;
+    cursor:pointer;
+    color:var(--ink-soft);
+    display:flex; align-items:center; gap:7px;
+    white-space:nowrap;
+  }
+  .tab .count{
+    background:var(--grey-bg); color:var(--ink-soft);
+    font-family:"Sarabun",sans-serif; font-variant-numeric:tabular-nums; font-size:11px;
+    padding:1px 6px; border-radius:999px;
+  }
+  .tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .tab.active .count{ background:#33455f; color:#fff; }
+
+  /* ---------- table ---------- */
+  .table-wrap{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:auto;
+    max-height:70vh;
+  }
+  table{ border-collapse:collapse; width:100%; min-width:1400px; }
+  thead th{
+    position:sticky; top:0; z-index:2;
+    background:#f6f7f7;
+    text-align:left;
+    font-weight:600;
+    font-size:13.5px;
+    color:var(--ink-soft);
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    border-right:1px solid var(--line-soft);
+    white-space:nowrap;
+  }
+  thead th:first-child{ position:sticky; left:0; z-index:3; }
+  tbody td{
+    padding:9px 12px;
+    border-bottom:1px solid var(--line-soft);
+    border-right:1px solid var(--line-soft);
+    font-size:14.5px;
+    vertical-align:top;
+  }
+  tbody tr:hover{ background:#fafbfa; }
+  tbody td:first-child{
+    font-family:"Sarabun",sans-serif; font-variant-numeric:tabular-nums; color:var(--ink-soft); font-size:12px;
+    background:inherit;
+  }
+  td.name-cell{ min-width:190px; font-weight:500; }
+  td.name-cell .cat-tag{
+    display:block; font-size:11px; color:var(--ink-soft); font-weight:400; margin-top:2px;
+  }
+  td.id-cell{ font-family:"Sarabun",sans-serif; font-variant-numeric:tabular-nums; font-size:12px; min-width:130px; }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 9px; border-radius:999px; font-size:12px; font-weight:600;
+    white-space:nowrap;
+  }
+  .badge .dot{ width:6px; height:6px; border-radius:50%; }
+  .badge.expired{ background:var(--red-bg); color:var(--red); }
+  .badge.expired .dot{ background:var(--red); }
+  .badge.due{ background:var(--amber-bg); color:var(--amber); }
+  .badge.due .dot{ background:var(--amber); }
+  .badge.ok{ background:var(--green-bg); color:var(--green); }
+  .badge.ok .dot{ background:var(--green); }
+  .badge.unknown{ background:var(--grey-bg); color:var(--ink-soft); }
+  .badge.unknown .dot{ background:#9aa4ae; }
+
+  tr.row-expired{ background:#fdf5f4; }
+  tr.row-due{ background:#fefaf3; }
+
+  .editable-cell{ min-width:170px; }
+  .editable-value{
+    display:flex; align-items:center; gap:6px; cursor:text;
+    min-height:22px;
+  }
+  .editable-value a{ color:var(--steel); text-decoration:none; font-size:12.5px; word-break:break-all; }
+  .editable-value a:hover{ text-decoration:underline; }
+  .editable-value .placeholder{ color:#b7bec5; font-size:12.5px; }
+  .edit-icon{ opacity:0; font-size:11px; color:var(--ink-soft); transition:opacity .1s; }
+  .editable-value:hover .edit-icon{ opacity:1; }
+  .edit-row{ display:flex; gap:6px; align-items:center; }
+  .edit-row input{
+    flex:1; padding:6px 8px; border:1px solid var(--steel); border-radius:5px;
+    font-family:inherit; font-size:12.5px; min-width:120px;
+  }
+  .edit-row button{
+    border:none; border-radius:5px; padding:6px 9px; font-size:11.5px; cursor:pointer; font-family:inherit;
+  }
+  .edit-row .save-btn{ background:var(--ink); color:#fff; }
+  .edit-row .cancel-btn{ background:var(--grey-bg); color:var(--ink-soft); }
+  .save-flash{ font-size:11px; color:var(--green); }
+
+  td.remark-cell{ min-width:150px; color:var(--ink-soft); font-size:12.5px; }
+
+  .edit-row-btn{
+    background:#fff; border:1px solid var(--line); border-radius:5px;
+    width:26px; height:26px; cursor:pointer; color:var(--steel); font-size:13px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .edit-row-btn:hover{ background:var(--grey-bg); border-color:var(--steel); }
+
+  .empty-state, .error-state, .loading-state{
+    padding:60px 20px; text-align:center; color:var(--ink-soft);
+  }
+  .error-state{ color:var(--red); }
+  .error-state code{ background:var(--red-bg); padding:2px 6px; border-radius:4px; font-size:12px; }
+
+  footer.note{
+    margin-top:18px; font-size:12px; color:var(--ink-soft); line-height:1.7;
+  }
+  footer.note strong{ color:var(--ink); }
+
+  @media (max-width:760px){
+    .stats{ grid-template-columns:repeat(2,1fr); }
+    header.topbar{ padding:14px 16px; }
+    main{ padding:16px; }
+  }
+
+  /* ---------- modal: เพิ่มอุปกรณ์ ---------- */
+  .modal-backdrop{
+    display:none;
+    position:fixed; inset:0; background:rgba(21,34,56,.55);
+    z-index:50; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-backdrop.open{ display:flex; }
+  .modal-box{
+    background:#fff; border-radius:10px; width:100%; max-width:720px;
+    max-height:88vh; display:flex; flex-direction:column; overflow:hidden;
+    border-top:4px solid var(--amber);
+  }
+  .modal-head{
+    padding:18px 22px; border-bottom:1px solid var(--line-soft);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .modal-head h2{ margin:0; font-size:16.5px; font-weight:600; }
+  .modal-head button{
+    background:none; border:none; font-size:20px; cursor:pointer; color:var(--ink-soft); line-height:1;
+  }
+  .modal-body{ padding:20px 22px; overflow-y:auto; }
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; }
+  .form-field{ display:flex; flex-direction:column; gap:5px; }
+  .form-field.full{ grid-column:1 / -1; }
+  .form-field label{ font-size:12.5px; color:var(--ink-soft); font-weight:500; }
+  .form-field label .req{ color:var(--red); }
+  .form-field input, .form-field select{
+    padding:9px 10px; border:1px solid var(--line); border-radius:6px;
+    font-family:inherit; font-size:13.5px; background:#fff;
+  }
+  .form-field input:focus, .form-field select:focus{ outline:2px solid #cddaea; border-color:var(--steel); }
+  .form-field select:disabled{ background:var(--grey-bg); color:var(--ink-soft); cursor:not-allowed; }
+  .modal-foot{
+    padding:16px 22px; border-top:1px solid var(--line-soft);
+    display:flex; justify-content:flex-end; gap:10px;
+  }
+  .btn-secondary{
+    background:var(--grey-bg); border:1px solid var(--line); color:var(--ink-soft);
+    padding:9px 16px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:13.5px;
+  }
+  .btn-primary{
+    background:var(--ink); border:1px solid var(--ink); color:#fff;
+    padding:9px 18px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:600;
+  }
+  .btn-primary:disabled{ opacity:.6; cursor:default; }
+  .form-msg{ font-size:12.5px; margin-top:10px; min-height:16px; }
+  .form-msg.error{ color:var(--red); }
+  .form-msg.success{ color:var(--green); }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:12px 20px; border-radius:8px;
+    font-size:13px; z-index:60; opacity:0; pointer-events:none; transition:all .25s;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- brand / logo ---------- */
+  .brand-block{ display:flex; align-items:center; gap:14px; }
+  .logo-wrap{
+    width:54px; height:54px; border-radius:50%; background:#fff; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    border:2px solid #2b3f5e;
+  }
+  .logo-wrap img{ width:48px; height:48px; display:block; }
+
+  /* ---------- ปุ่มต่อแถว: แก้ไข / PDF ---------- */
+  .row-actions{ display:flex; gap:6px; }
+  .edit-row-btn svg, .pdf-btn svg{ display:block; }
+  .pdf-btn{
+    background:#fff; border:1px solid #e3bcb8; border-radius:5px;
+    width:26px; height:26px; cursor:pointer; color:var(--red);
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .pdf-btn:hover{ background:var(--red-bg); border-color:var(--red); }
+
+  /* ---------- เซลล์เอกสารแนบ ---------- */
+  td.att-cell{ min-width:150px; }
+  .att-view-btn{
+    background:#fff; border:1px solid var(--steel); color:var(--steel); border-radius:6px;
+    padding:4px 10px; font-family:inherit; font-size:13.5px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+  }
+  .att-view-btn:hover{ background:var(--steel); color:#fff; }
+  .att-counts{ font-size:12.5px; color:var(--ink-soft); margin-top:3px; }
+  .att-legacy{ font-size:12.5px; margin-top:3px; }
+  .att-legacy a{ color:var(--steel); }
+
+  /* ---------- อัปโหลดไฟล์ในฟอร์ม ---------- */
+  .form-field .hint{ font-weight:400; color:var(--ink-soft); font-size:12.5px; margin-left:6px; }
+  .att-list{ display:flex; flex-direction:column; gap:6px; }
+  .att-item{
+    display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:6px;
+    padding:6px 8px; background:#fafbfa;
+  }
+  .att-thumb{
+    width:38px; height:38px; border-radius:4px; background:var(--grey-bg); flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; color:var(--red); font-size:11px; font-weight:700;
+  }
+  .att-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .att-name{ flex:1; min-width:0; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .att-tag{ font-size:11.5px; padding:1px 7px; border-radius:999px; background:var(--grey-bg); color:var(--ink-soft); }
+  .att-tag.new{ background:var(--amber-bg); color:var(--amber); }
+  .att-item button{
+    border:none; background:none; cursor:pointer; color:var(--ink-soft); font-size:15px; padding:2px 6px; font-family:inherit;
+  }
+  .att-item button:hover{ color:var(--red); }
+  .att-item button.view{ font-size:13px; color:var(--steel); }
+  .upload-btn{
+    display:inline-flex; align-items:center; gap:6px; align-self:flex-start; cursor:pointer;
+    border:1px dashed var(--steel); color:var(--steel); border-radius:6px; padding:6px 12px; font-size:14px; background:#fff;
+  }
+  .upload-btn:hover{ background:#eef3f8; }
+  .upload-btn.disabled{ opacity:.45; pointer-events:none; }
+
+  /* ---------- หน้าดูเอกสาร (มีลายน้ำ) ---------- */
+  .viewer-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(21,34,56,.7); z-index:55;
+    align-items:center; justify-content:center; padding:18px;
+  }
+  .viewer-backdrop.open{ display:flex; }
+  .viewer-box{
+    background:#fff; border-radius:10px; width:100%; max-width:1000px; max-height:94vh;
+    display:flex; flex-direction:column; overflow:hidden; border-top:4px solid var(--amber);
+  }
+  .viewer-head{
+    padding:12px 18px; border-bottom:1px solid var(--line-soft); display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .viewer-head h2{ margin:0; font-size:17px; font-weight:600; }
+  .viewer-head .sub{ font-size:12.5px; color:var(--ink-soft); }
+  .viewer-head button{ background:none; border:none; font-size:24px; cursor:pointer; color:var(--ink-soft); line-height:1; }
+  .viewer-body{ padding:14px 18px 22px; overflow-y:auto; background:#e9ecee; }
+  .viewer-sec{ margin-bottom:22px; }
+  .viewer-cap{ font-size:14px; font-weight:600; margin-bottom:8px; color:var(--ink); }
+  .viewer-holder{ display:flex; flex-direction:column; gap:10px; align-items:center; color:var(--ink-soft); }
+  .viewer-holder.err{ color:var(--red); }
+  canvas.viewer-canvas{ width:100%; max-width:900px; height:auto; background:#fff; box-shadow:0 1px 6px rgba(0,0,0,.18); }
+
+  /* ---------- กำลังประมวลผล (สร้าง PDF) ---------- */
+  .busy-overlay{
+    display:none; position:fixed; inset:0; z-index:70; background:rgba(21,34,56,.55);
+    align-items:center; justify-content:center;
+  }
+  .busy-overlay.open{ display:flex; }
+  .busy-box{ background:#fff; border-radius:10px; padding:22px 30px; text-align:center; min-width:280px; border-top:4px solid var(--amber); }
+  .busy-box .spinner{
+    width:30px; height:30px; margin:0 auto 12px; border:3px solid var(--line); border-top-color:var(--ink);
+    border-radius:50%; animation:spin 1s linear infinite;
+  }
+
+  /* ---------- รายงาน PDF (วาดนอกจอ แล้วแปลงเป็นภาพลง PDF) ---------- */
+  #pdfStage{ position:fixed; left:-10000px; top:0; width:794px; z-index:-1; }
+  .rp-page{
+    width:794px; height:1122px; box-sizing:border-box; padding:44px 48px; background:#fff; color:#152238;
+    font-family:"Sarabun",sans-serif; position:relative; overflow:hidden;
+  }
+  .rp-head{ display:flex; align-items:center; gap:16px; border-bottom:3px solid #c97a1a; padding-bottom:14px; }
+  .rp-head img{ width:72px; height:72px; }
+  .rp-co{ font-size:22px; font-weight:700; }
+  .rp-co-en{ font-size:15px; color:#425066; }
+  .rp-title{ font-size:26px; font-weight:700; margin:22px 0 2px; }
+  .rp-sub{ font-size:16px; color:#425066; margin-bottom:16px; }
+  .rp-badge{ display:inline-block; padding:4px 14px; border-radius:999px; font-weight:600; font-size:16px; margin-bottom:14px; }
+  .rp-badge.expired{ background:#fbe6e3; color:#b23a32; }
+  .rp-badge.due{ background:#fbf0dd; color:#c97a1a; }
+  .rp-badge.ok{ background:#e4f2e8; color:#2f7a4f; }
+  .rp-badge.unknown{ background:#eef0f1; color:#425066; }
+  table.rp-table{ width:100%; border-collapse:collapse; font-size:16px; }
+  table.rp-table td{ border:1px solid #d7dce0; padding:7px 10px; vertical-align:top; }
+  table.rp-table td.k{ width:32%; background:#f4f6f7; font-weight:600; color:#33506f; }
+  .rp-note{ margin-top:16px; font-size:15px; color:#425066; }
+  .rp-foot{ position:absolute; left:48px; right:48px; bottom:26px; font-size:13px; color:#6b7686; display:flex; justify-content:space-between; border-top:1px solid #d7dce0; padding-top:8px; }
+  .rp-cap{ font-size:18px; font-weight:600; margin-bottom:12px; border-left:4px solid #c97a1a; padding-left:10px; }
+  .rp-imgwrap{ height:900px; display:flex; align-items:center; justify-content:center; }
+  .rp-imgwrap img{ max-width:100%; max-height:100%; object-fit:contain; border:1px solid #d7dce0; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand-block">
+    <div class="logo-wrap"><img id="logoImg" alt="Best Performance Engineering" src="data:image/png;base64,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"></div>
+    <div class="title-block">
+    <h1>ทะเบียนการสอบเทียบเครื่องมือ</h1>
+    <p>Calibration Equipment Register List — Fabrication Section (FAS)</p>
+    </div>
+  </div>
+  <div class="meta">
+    <span id="syncTime">ยังไม่ได้ซิงค์ข้อมูล</span>
+    <button id="addBtn" onclick="openAddModal()">
+      <span>&#65291;</span> เพิ่มอุปกรณ์ใหม่
+    </button>
+    <button id="refreshBtn" onclick="loadData()">
+      <span id="refreshIcon">&#8635;</span> รีเฟรชข้อมูล
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <section class="stats">
+    <div class="stat-card">
+      <div class="num" id="statTotal">–</div>
+      <div class="label">เครื่องมือทั้งหมด</div>
+    </div>
+    <div class="stat-card expired">
+      <div class="num" id="statExpired">–</div>
+      <div class="label">หมดอายุแล้ว</div>
+    </div>
+    <div class="stat-card due">
+      <div class="num" id="statDue">–</div>
+      <div class="label">ใกล้ครบกำหนด (≤ 30 วัน)</div>
+    </div>
+    <div class="stat-card ok">
+      <div class="num" id="statOk">–</div>
+      <div class="label">ปกติ</div>
+    </div>
+  </section>
+
+  <div class="tabs" id="tabsWrap"></div>
+
+  <div class="controls">
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchInput" type="text" placeholder="ค้นหา: ชื่อเครื่องมือ / เลขทะเบียน / ยี่ห้อ / ผู้ใช้งาน ..." oninput="renderTable()">
+    </div>
+    <select id="sortSelect" onchange="renderTable()">
+      <option value="remaining_asc">เรียง: ใกล้หมดอายุก่อน</option>
+      <option value="remaining_desc">เรียง: หมดอายุช้าสุดก่อน</option>
+      <option value="name_asc">เรียง: ชื่อเครื่องมือ (ก-ฮ)</option>
+      <option value="expire_asc">เรียง: วันหมดอายุ</option>
+    </select>
+    <div class="filter-toggle" id="statusFilter">
+      <button class="active" data-status="all" onclick="setStatusFilter('all')">ทั้งหมด</button>
+      <button data-status="expired" onclick="setStatusFilter('expired')">หมดอายุ</button>
+      <button data-status="due" onclick="setStatusFilter('due')">ใกล้ครบกำหนด</button>
+      <button data-status="ok" onclick="setStatusFilter('ok')">ปกติ</button>
+    </div>
+  </div>
+
+  <div class="table-wrap" id="tableWrap">
+    <div class="loading-state">กำลังโหลดข้อมูลจาก Google Sheet ...</div>
+  </div>
+
+  <footer class="note">
+    <strong>หมายเหตุ:</strong>
+    ไฟล์รูปภาพและใบรับรองที่แนบจะถูกเก็บไว้ใน Google Drive ของบริษัท (โฟลเดอร์ "BPE Calibration Documents") และเปิดดูผ่านหน้านี้เท่านั้น โดยจะมีลายน้ำชื่อบริษัทบนทุกหน้า
+    กดไอคอน <strong>PDF</strong> ที่แถวของเครื่องมือเพื่อดาวน์โหลดรายงาน PDF พร้อมรูปภาพและใบรับรอง (มีลายน้ำ) · คลิกช่อง "เลขที่ใบรับรอง" ในตารางเพื่อแก้ไขได้ทันที
+  </footer>
+
+</main>
+
+<!-- ---------- Modal: เพิ่มอุปกรณ์ใหม่ ---------- -->
+<div class="modal-backdrop" id="addModalBackdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2 id="modalTitle">เพิ่มอุปกรณ์ใหม่</h2>
+      <button onclick="closeAddModal()" aria-label="ปิด">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>หมวดหมู่ <span class="req">*</span></label>
+          <select id="f_category" onchange="onCategorySelectChange()"></select>
+        </div>
+        <div class="form-field full" id="newCategoryWrap" style="display:none;">
+          <label>ชื่อหมวดหมู่ใหม่ <span class="req">*</span></label>
+          <input id="f_newCategory" type="text" placeholder="เช่น Vernier Caliper (ระบบจะสร้าง Sheet นี้ให้อัตโนมัติ)">
+        </div>
+        <div class="form-field full">
+          <label>ชื่อเครื่องมือ <span class="req">*</span></label>
+          <input id="f_name" type="text" placeholder="เช่น Digital Recorder (Temperature)">
+        </div>
+        <div class="form-field">
+          <label>เลขทะเบียน (ID Number)</label>
+          <input id="f_idNumber" type="text">
+        </div>
+        <div class="form-field">
+          <label>เลขเครื่องมือ (Serial No.)</label>
+          <input id="f_serialNo" type="text">
+        </div>
+        <div class="form-field">
+          <label>ยี่ห้อ (Brand)</label>
+          <input id="f_brand" type="text">
+        </div>
+        <div class="form-field">
+          <label>รุ่น (Model)</label>
+          <input id="f_model" type="text">
+        </div>
+        <div class="form-field">
+          <label>ผู้ใช้งาน (User)</label>
+          <input id="f_user" type="text" value="FAS">
+        </div>
+        <div class="form-field">
+          <label>สถานที่ใช้ (Location)</label>
+          <input id="f_location" type="text">
+        </div>
+        <div class="form-field">
+          <label>ความถี่สอบเทียบ</label>
+          <input id="f_internal" type="text" placeholder="เช่น 6 Months">
+        </div>
+        <div class="form-field">
+          <label>ช่วงการใช้งาน (Range)</label>
+          <input id="f_range" type="text">
+        </div>
+        <div class="form-field">
+          <label>ค่าความละเอียด (Resolution)</label>
+          <input id="f_resolution" type="text">
+        </div>
+        <div class="form-field">
+          <label>เกณฑ์การยอมรับ (Tolerance)</label>
+          <input id="f_tolerance" type="text">
+        </div>
+        <div class="form-field">
+          <label>วันที่สอบเทียบ (Cal. Date)</label>
+          <input id="f_calDate" type="date">
+        </div>
+        <div class="form-field">
+          <label>วันหมดอายุ (Expire Date)</label>
+          <input id="f_expireDate" type="date">
+        </div>
+        <div class="form-field">
+          <label>สอบเทียบโดย</label>
+          <input id="f_calibratedBy" type="text">
+        </div>
+        <div class="form-field">
+          <label>เลขที่ใบรับรอง</label>
+          <input id="f_certificateNo" type="text">
+        </div>
+        <div class="form-field">
+          <label>อุปกรณ์สอบเทียบหลัก</label>
+          <input id="f_masterEquipment" type="text">
+        </div>
+        <div class="form-field full">
+          <label>รูปภาพเครื่องมือ <span class="hint" id="attCount_photo"></span></label>
+          <div class="att-list" id="attList_photo"></div>
+          <label class="upload-btn" id="attBtn_photo">&#65291; เลือกรูปภาพ (เลือกได้หลายไฟล์)
+            <input type="file" accept="image/*" multiple hidden onchange="onPickFiles('photo', this)">
+          </label>
+        </div>
+        <div class="form-field full">
+          <label>เอกสารใบรับรอง (PDF หรือรูปภาพ) <span class="hint" id="attCount_cert"></span></label>
+          <div class="att-list" id="attList_cert"></div>
+          <label class="upload-btn" id="attBtn_cert">&#65291; เลือกไฟล์ใบรับรอง (เลือกได้หลายไฟล์)
+            <input type="file" accept="application/pdf,image/*" multiple hidden onchange="onPickFiles('cert', this)">
+          </label>
+          <span class="hint" style="margin-left:0">ไฟล์จะถูกเก็บใน Google Drive ของบริษัท และเมื่อกดดูจะมีลายน้ำชื่อบริษัททุกหน้า (PDF สูงสุด 8 MB ต่อไฟล์ · รูปภาพจะถูกย่ออัตโนมัติ)</span>
+        </div>
+        <div class="form-field full">
+          <label>หมายเหตุ (Remark)</label>
+          <input id="f_remark" type="text">
+        </div>
+      </div>
+      <div class="form-msg" id="formMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary" onclick="closeAddModal()">ยกเลิก</button>
+      <button class="btn-primary" id="submitAddBtn" onclick="submitAddForm()">บันทึกอุปกรณ์</button>
+    </div>
+  </div>
+</div>
+
+<div class="viewer-backdrop" id="viewerBackdrop" onclick="if(event.target===this)closeViewer()">
+  <div class="viewer-box">
+    <div class="viewer-head">
+      <div><h2 id="viewerTitle">เอกสาร</h2><div class="sub">แสดงพร้อมลายน้ำ Best Performance Engineering</div></div>
+      <button onclick="closeViewer()" aria-label="ปิด">&times;</button>
+    </div>
+    <div class="viewer-body" id="viewerBody"></div>
+  </div>
+</div>
+
+<div class="busy-overlay" id="busyOverlay">
+  <div class="busy-box"><div class="spinner"></div><div id="busyText">กำลังประมวลผล ...</div></div>
+</div>
+<div id="pdfStage" aria-hidden="true"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============== ตั้งค่าการเชื่อมต่อ ============== */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqdiar3oN8Jui5X9LIhEiD9QIWkcZ-YTrvytch0NgJt3hvW3aIKr5BrxO8449Dt_7_/exec';
+const DUE_SOON_DAYS = 30;
+
+let RAW_DATA = {};        // { category: [items] }
+let CATEGORY_LIST = [];
+let CURRENT_TAB = 'all';
+let STATUS_FILTER = 'all';
+let EDIT_MODE = false;          // false = เพิ่มใหม่, true = แก้ไขของเดิม
+let EDIT_TARGET = null;         // { category, rowNumber }
+
+// รายชื่อหมวดหมู่สำรอง (ตรงกับ SHEET_CATEGORIES ใน Code.gs) ใช้กรณีข้อมูลยังโหลดไม่เสร็จ
+const DEFAULT_CATEGORIES = [
+  'Recorder-Pressure Gauge',
+  'Welding Machine',
+  'Digital Level',
+  'Portable Welding Rod ตามเซอ',
+  'Portable Welding Rod แก้ไข',
+  'Digital +elcometer',
+  'Torque Wrench',
+  'เครื่องวัดระดับ',
+  'Blasting'
+];
+
+/* ============== โหลดข้อมูล ============== */
+async function loadData(){
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  btn.disabled = true;
+  icon.classList.add('spin');
+  document.getElementById('tableWrap').innerHTML = '<div class="loading-state">กำลังโหลดข้อมูลจาก Google Sheet ...</div>';
+
+  try{
+    const res = await fetch(SCRIPT_URL + '?action=list', { method:'GET' });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
+
+    RAW_DATA = json.data;
+    CATEGORY_LIST = Object.keys(RAW_DATA);
+    document.getElementById('syncTime').textContent =
+      'ซิงค์ล่าสุด: ' + new Date(json.generatedAt).toLocaleString('th-TH');
+
+    buildTabs();
+    renderStats();
+    renderTable();
+    populateCategorySelect();
+  }catch(err){
+    document.getElementById('tableWrap').innerHTML =
+      '<div class="error-state">เชื่อมต่อ Google Apps Script ไม่สำเร็จ<br><br>' +
+      '<code>' + String(err.message || err) + '</code><br><br>' +
+      'ตรวจสอบว่า Deploy เป็น Web App แบบ "Anyone" และวางโค้ด Code.gs ถูกต้องแล้ว</div>';
+  }finally{
+    btn.disabled = false;
+    icon.classList.remove('spin');
+  }
+}
+
+/* ============== สถานะวันหมดอายุ ============== */
+function getStatus(item){
+  let days = item.remainingDays;
+  if(days === '' || days === null || typeof days === 'undefined' || isNaN(days)){
+    if(item.expireDate){
+      const exp = new Date(item.expireDate);
+      const today = new Date(); today.setHours(0,0,0,0);
+      if(!isNaN(exp)) days = Math.round((exp - today) / 86400000);
+    }
+  }
+  days = Math.round(Number(days));
+  if(isNaN(days)) return { key:'unknown', label:'ไม่ทราบ', days:null };
+  if(days < 0) return { key:'expired', label:'หมดอายุ ' + Math.abs(days) + ' วันแล้ว', days };
+  if(days <= DUE_SOON_DAYS) return { key:'due', label:'เหลือ ' + days + ' วัน', days };
+  return { key:'ok', label:'เหลือ ' + days + ' วัน', days };
+}
+
+function flattenAll(){
+  const list = [];
+  CATEGORY_LIST.forEach(cat=>{
+    (RAW_DATA[cat] || []).forEach(item=>{
+      list.push(Object.assign({ __category: cat }, item));
+    });
+  });
+  return list;
+}
+
+/* ============== สรุปสถิติ ============== */
+function renderStats(){
+  const all = flattenAll();
+  let expired=0, due=0, ok=0;
+  all.forEach(it=>{
+    const s = getStatus(it).key;
+    if(s==='expired') expired++;
+    else if(s==='due') due++;
+    else if(s==='ok') ok++;
+  });
+  document.getElementById('statTotal').textContent = all.length;
+  document.getElementById('statExpired').textContent = expired;
+  document.getElementById('statDue').textContent = due;
+  document.getElementById('statOk').textContent = ok;
+}
+
+/* ============== แท็บหมวดหมู่ ============== */
+function buildTabs(){
+  const wrap = document.getElementById('tabsWrap');
+  const all = flattenAll();
+  let html = '<div class="tab' + (CURRENT_TAB==='all'?' active':'') + '" onclick="setTab(\'all\')">ทั้งหมด <span class="count">'+all.length+'</span></div>';
+  CATEGORY_LIST.forEach(cat=>{
+    const count = (RAW_DATA[cat]||[]).length;
+    html += '<div class="tab' + (CURRENT_TAB===cat?' active':'') + '" onclick="setTab(\''+escAttr(cat)+'\')">'+esc(cat)+' <span class="count">'+count+'</span></div>';
+  });
+  wrap.innerHTML = html;
+}
+function setTab(cat){ CURRENT_TAB = cat; buildTabs(); renderTable(); }
+function setStatusFilter(s){
+  STATUS_FILTER = s;
+  document.querySelectorAll('#statusFilter button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.status === s);
+  });
+  renderTable();
+}
+
+/* ============== ตารางข้อมูล ============== */
+function renderTable(){
+  let items = CURRENT_TAB === 'all' ? flattenAll() :
+    (RAW_DATA[CURRENT_TAB] || []).map(it => Object.assign({__category:CURRENT_TAB}, it));
+
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if(q){
+    items = items.filter(it =>
+      [it.equipmentName, it.idNumber, it.serialNo, it.brand, it.model, it.user, it.location, it.certificateNo]
+        .filter(Boolean).join(' ').toLowerCase().includes(q)
+    );
+  }
+
+  if(STATUS_FILTER !== 'all'){
+    items = items.filter(it => getStatus(it).key === STATUS_FILTER);
+  }
+
+  const sortMode = document.getElementById('sortSelect').value;
+  items = items.slice().sort((a,b)=>{
+    if(sortMode === 'remaining_asc') return (getStatus(a).days ?? 99999) - (getStatus(b).days ?? 99999);
+    if(sortMode === 'remaining_desc') return (getStatus(b).days ?? -99999) - (getStatus(a).days ?? -99999);
+    if(sortMode === 'name_asc') return String(a.equipmentName).localeCompare(String(b.equipmentName), 'th');
+    if(sortMode === 'expire_asc') return String(a.expireDate).localeCompare(String(b.expireDate));
+    return 0;
+  });
+
+  const wrap = document.getElementById('tableWrap');
+  if(items.length === 0){
+    wrap.innerHTML = '<div class="empty-state">ไม่พบรายการเครื่องมือที่ตรงกับเงื่อนไข</div>';
+    return;
+  }
+
+  let rows = items.map(it => renderRow(it)).join('');
+
+  wrap.innerHTML =
+    '<table><thead><tr>' +
+      '<th></th>' +
+      '<th>ลำดับ</th>' +
+      '<th>รหัส / เลขทะเบียน</th>' +
+      '<th>ชื่อเครื่องมือ</th>' +
+      '<th>ยี่ห้อ / รุ่น</th>' +
+      '<th>ผู้ใช้ / สถานที่</th>' +
+      '<th>วันที่สอบเทียบ</th>' +
+      '<th>วันหมดอายุ</th>' +
+      '<th>สถานะ</th>' +
+      '<th>เลขที่ใบรับรอง</th>' +
+      '<th>เอกสาร / รูปภาพ</th>' +
+      '<th>หมายเหตุ</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function renderRow(it){
+  const st = getStatus(it);
+  const rowClass = st.key === 'expired' ? 'row-expired' : (st.key === 'due' ? 'row-due' : '');
+
+  return '<tr class="'+rowClass+'">' +
+    '<td><div class="row-actions">' +
+      '<button class="edit-row-btn" title="แก้ไขรายการนี้" onclick="openEditModal(\''+escAttr(it.__category)+'\','+it.rowNumber+')">'+EDIT_ICON+'</button>' +
+      '<button class="pdf-btn" title="Export เป็น PDF (พร้อมรูปภาพและใบรับรอง)" onclick="exportItemPdf(\''+escAttr(it.__category)+'\','+it.rowNumber+')">'+PDF_ICON+'</button>' +
+    '</div></td>' +
+    '<td>'+esc(it.item || '')+'</td>' +
+    '<td class="id-cell">'+esc(it.idNumber || it.serialNo || '')+'</td>' +
+    '<td class="name-cell">'+esc(it.equipmentName || '')+'<span class="cat-tag">'+esc(it.__category)+(it.status?(' · '+esc(it.status)):'')+'</span></td>' +
+    '<td>'+esc(it.brand||'')+(it.model?(' / '+esc(it.model)):'')+'</td>' +
+    '<td>'+esc(it.user||'')+(it.location?('<br><span class="cat-tag">'+esc(it.location)+'</span>'):'')+'</td>' +
+    '<td class="mono">'+esc(it.calDate||'-')+'</td>' +
+    '<td class="mono">'+esc(it.expireDate||'-')+'</td>' +
+    '<td><span class="badge '+st.key+'"><span class="dot"></span>'+esc(st.label)+'</span></td>' +
+    editableCell(it.__category, it.rowNumber, 'certificateNo', it.certificateNo, 'text', 'ระบุเลขที่ใบรับรอง') +
+    attachCell(it) +
+    '<td class="remark-cell">'+esc(it.remark||'')+'</td>' +
+  '</tr>';
+}
+
+/* ============== เซลล์แก้ไขได้ (เลขที่ใบรับรอง / Link เอกสาร) ============== */
+function editableCell(category, rowNumber, field, value, kind, placeholder){
+  const cellId = 'cell_' + field + '_' + rowNumber + '_' + slug(category);
+  const displayValue = value ? esc(value) : '';
+  let display;
+  if(kind === 'link' && value){
+    display = '<a href="'+escAttr(value)+'" target="_blank" rel="noopener" title="เปิดไฟล์เอกสาร">&#128279; '+shorten(value)+'</a>';
+  }else if(value){
+    display = '<span class="mono">'+displayValue+'</span>';
+  }else{
+    display = '<span class="placeholder">'+esc(placeholder)+'</span>';
+  }
+
+  return '<td class="editable-cell" id="'+cellId+'">' +
+    '<div class="editable-value" onclick="startEdit(\''+cellId+'\',\''+escAttr(category)+'\','+rowNumber+',\''+field+'\',\''+escAttr(value||'')+'\',\''+kind+'\')">' +
+      display + '<span class="edit-icon">&#9998;</span>' +
+    '</div>' +
+  '</td>';
+}
+
+function startEdit(cellId, category, rowNumber, field, currentValue, kind){
+  const cell = document.getElementById(cellId);
+  cell.innerHTML =
+    '<div class="edit-row">' +
+      '<input type="text" id="input_'+cellId+'" value="'+escAttr(currentValue)+'" placeholder="'+(kind==='link'?'https://...':'')+'">' +
+      '<button class="save-btn" onclick="saveEdit(\''+cellId+'\',\''+category+'\','+rowNumber+',\''+field+'\',\''+kind+'\')">บันทึก</button>' +
+      '<button class="cancel-btn" onclick="renderTable()">ยกเลิก</button>' +
+    '</div>';
+  document.getElementById('input_'+cellId).focus();
+}
+
+async function saveEdit(cellId, category, rowNumber, field, kind){
+  const input = document.getElementById('input_'+cellId);
+  const value = input.value.trim();
+  const cell = document.getElementById(cellId);
+  cell.innerHTML = '<div class="save-flash">กำลังบันทึก...</div>';
+
+  try{
+    const res = await fetch(SCRIPT_URL, {
+      method:'POST',
+      headers: { 'Content-Type':'text/plain;charset=utf-8' }, // หลีกเลี่ยง CORS preflight
+      body: JSON.stringify({ action:'updateField', category, rowNumber, field, value })
+    });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+
+    // อัปเดตข้อมูลใน memory
+    const arr = RAW_DATA[category] || [];
+    const target = arr.find(r => r.rowNumber === rowNumber);
+    if(target) target[field] = value;
+
+    renderTable();
+  }catch(err){
+    cell.innerHTML = '<div class="save-flash" style="color:var(--red)">บันทึกไม่สำเร็จ: '+esc(String(err.message||err))+'</div>';
+    setTimeout(renderTable, 2200);
+  }
+}
+
+/* ============== เพิ่มอุปกรณ์ใหม่ ============== */
+function populateCategorySelect(){
+  const sel = document.getElementById('f_category');
+  const currentValue = sel.value;
+  const list = CATEGORY_LIST.length ? CATEGORY_LIST : DEFAULT_CATEGORIES;
+  let html = list.map(c => '<option value="'+escAttr(c)+'">'+esc(c)+'</option>').join('');
+  html += '<option value="__new__">&#65291; เพิ่มหมวดหมู่ใหม่...</option>';
+  sel.innerHTML = html;
+  if(CURRENT_TAB !== 'all' && list.includes(CURRENT_TAB)){
+    sel.value = CURRENT_TAB;
+  }else if(currentValue && (list.includes(currentValue) || currentValue === '__new__')){
+    sel.value = currentValue;
+  }
+  onCategorySelectChange();
+}
+
+function openAddModal(){
+  EDIT_MODE = false;
+  EDIT_TARGET = null;
+  document.getElementById('modalTitle').textContent = 'เพิ่มอุปกรณ์ใหม่';
+  document.getElementById('submitAddBtn').textContent = 'บันทึกอุปกรณ์';
+  document.getElementById('f_category').disabled = false;
+  resetAttachState([]);
+  populateCategorySelect(); // โหลดรายชื่อหมวดหมู่ล่าสุดทุกครั้งที่เปิดฟอร์ม กันกรณีข้อมูลยังโหลดไม่เสร็จตอนหน้าเว็บเปิดขึ้นมา
+  document.getElementById('formMsg').textContent = '';
+  document.getElementById('formMsg').className = 'form-msg';
+  document.getElementById('addModalBackdrop').classList.add('open');
+  document.getElementById('f_name').focus();
+}
+
+function openEditModal(category, rowNumber){
+  const item = (RAW_DATA[category] || []).find(r => r.rowNumber === rowNumber);
+  if(!item){ showToast('ไม่พบรายการนี้ ลองรีเฟรชข้อมูลใหม่อีกครั้ง'); return; }
+
+  EDIT_MODE = true;
+  EDIT_TARGET = { category, rowNumber };
+
+  populateCategorySelect();
+  const sel = document.getElementById('f_category');
+  sel.value = category;
+  sel.disabled = true; // แก้ไขได้เฉพาะข้อมูล ไม่ย้ายหมวดหมู่
+  document.getElementById('newCategoryWrap').style.display = 'none';
+
+  document.getElementById('f_name').value = item.equipmentName || '';
+  document.getElementById('f_idNumber').value = item.idNumber || '';
+  document.getElementById('f_serialNo').value = item.serialNo || '';
+  document.getElementById('f_brand').value = item.brand || '';
+  document.getElementById('f_model').value = item.model || '';
+  document.getElementById('f_user').value = item.user || '';
+  document.getElementById('f_location').value = item.location || '';
+  document.getElementById('f_internal').value = item.internal || '';
+  document.getElementById('f_range').value = item.range || '';
+  document.getElementById('f_resolution').value = item.resolution || '';
+  document.getElementById('f_tolerance').value = item.tolerance || '';
+  document.getElementById('f_calDate').value = item.calDate || '';
+  document.getElementById('f_expireDate').value = item.expireDate || '';
+  document.getElementById('f_calibratedBy').value = item.calibratedBy || '';
+  document.getElementById('f_certificateNo').value = item.certificateNo || '';
+  document.getElementById('f_masterEquipment').value = item.masterEquipment || '';
+  resetAttachState(item.attachments || []);
+  document.getElementById('f_remark').value = item.remark || '';
+
+  document.getElementById('modalTitle').textContent = 'แก้ไขข้อมูล: ' + (item.equipmentName || '');
+  document.getElementById('submitAddBtn').textContent = 'บันทึกการแก้ไข';
+  document.getElementById('formMsg').textContent = '';
+  document.getElementById('formMsg').className = 'form-msg';
+  document.getElementById('addModalBackdrop').classList.add('open');
+  document.getElementById('f_name').focus();
+}
+
+function closeAddModal(){
+  document.getElementById('addModalBackdrop').classList.remove('open');
+  ['f_name','f_idNumber','f_serialNo','f_brand','f_model','f_location','f_internal','f_range',
+   'f_resolution','f_tolerance','f_calDate','f_expireDate','f_calibratedBy','f_certificateNo',
+   'f_masterEquipment','f_remark','f_newCategory'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('f_user').value = 'FAS';
+  document.getElementById('newCategoryWrap').style.display = 'none';
+  document.getElementById('f_category').disabled = false;
+  EDIT_MODE = false;
+  EDIT_TARGET = null;
+  resetAttachState([]);
+}
+
+function onCategorySelectChange(){
+  const sel = document.getElementById('f_category');
+  const wrap = document.getElementById('newCategoryWrap');
+  wrap.style.display = (sel.value === '__new__') ? 'block' : 'none';
+  if(sel.value === '__new__') document.getElementById('f_newCategory').focus();
+}
+
+async function submitAddForm(){
+  const msg = document.getElementById('formMsg');
+  const sel = document.getElementById('f_category');
+  const category = EDIT_MODE
+    ? EDIT_TARGET.category
+    : (sel.value === '__new__' ? document.getElementById('f_newCategory').value.trim() : sel.value);
+  const name = document.getElementById('f_name').value.trim();
+
+  if(!category){ msg.textContent = 'กรุณาเลือกหรือระบุชื่อหมวดหมู่'; msg.className='form-msg error'; return; }
+  if(!name){ msg.textContent = 'กรุณากรอกชื่อเครื่องมือ'; msg.className='form-msg error'; return; }
+
+  const btn = document.getElementById('submitAddBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  msg.textContent = ''; msg.className = 'form-msg';
+
+  const fields = {
+    name,
+    idNumber: document.getElementById('f_idNumber').value.trim(),
+    serialNo: document.getElementById('f_serialNo').value.trim(),
+    brand: document.getElementById('f_brand').value.trim(),
+    model: document.getElementById('f_model').value.trim(),
+    user: document.getElementById('f_user').value.trim(),
+    location: document.getElementById('f_location').value.trim(),
+    internal: document.getElementById('f_internal').value.trim(),
+    range: document.getElementById('f_range').value.trim(),
+    resolution: document.getElementById('f_resolution').value.trim(),
+    tolerance: document.getElementById('f_tolerance').value.trim(),
+    calDate: document.getElementById('f_calDate').value,
+    expireDate: document.getElementById('f_expireDate').value,
+    calibratedBy: document.getElementById('f_calibratedBy').value.trim(),
+    certificateNo: document.getElementById('f_certificateNo').value.trim(),
+    masterEquipment: document.getElementById('f_masterEquipment').value.trim(),
+    remark: document.getElementById('f_remark').value.trim()
+  };
+
+  const payload = EDIT_MODE
+    ? { action:'updateItem', category, rowNumber: EDIT_TARGET.rowNumber, fields }
+    : { action:'addItem', category, fields };
+
+  try{
+    // 1) อัปโหลดไฟล์ใหม่ (ถ้ามี) ไป Google Drive ทีละไฟล์
+    const totalNew = ATTACH_STATE.photo.concat(ATTACH_STATE.cert).filter(a => a.pending).length;
+    let doneNew = 0;
+    const finalAtts = [];
+    for(const kind of ['photo', 'cert']){
+      for(const a of ATTACH_STATE[kind]){
+        if(a.pending){
+          doneNew++;
+          btn.textContent = 'กำลังอัปโหลดไฟล์ ' + doneNew + '/' + totalNew + ' ...';
+          finalAtts.push(await uploadAttachment(category, a));
+        }else{
+          finalAtts.push({ id: a.id, name: a.name, mime: a.mime, kind: a.kind });
+        }
+      }
+    }
+    fields.attachments = finalAtts.length ? JSON.stringify(finalAtts) : '';
+
+    // 2) บันทึกข้อมูลลง Google Sheet
+    btn.textContent = 'กำลังบันทึก...';
+    const res = await fetch(SCRIPT_URL, {
+      method:'POST',
+      headers: { 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+
+    // 3) ไฟล์ที่ถูกลบออกจากรายการ -> ย้ายไปถังขยะใน Drive (ไม่รอผล)
+    const removedIds = ATTACH_STATE.removedIds.slice();
+    if(removedIds.length){
+      fetch(SCRIPT_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action:'trashFiles', ids: removedIds }) }).catch(()=>{});
+    }
+
+    const wasEdit = EDIT_MODE;
+    closeAddModal();
+    showToast(wasEdit ? ('แก้ไข "'+name+'" เรียบร้อยแล้ว') : ('เพิ่ม "'+name+'" เรียบร้อยแล้ว'));
+    await loadData();
+    setTab(category);
+  }catch(err){
+    msg.textContent = 'บันทึกไม่สำเร็จ: ' + (err.message || err);
+    msg.className = 'form-msg error';
+  }finally{
+    btn.disabled = false; btn.textContent = EDIT_MODE ? 'บันทึกการแก้ไข' : 'บันทึกอุปกรณ์';
+  }
+}
+
+function showToast(text){
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 2600);
+}
+
+/* ============== เอกสาร / รูปภาพ แนบกับอุปกรณ์ (เก็บใน Google Drive) ============== */
+const WATERMARK_TEXT = 'Best Performance Engineering Ltd,.co';  // ข้อความลายน้ำ
+const MAX_PHOTOS = 5;        // จำนวนรูปภาพสูงสุดต่ออุปกรณ์
+const MAX_DOCS = 5;          // จำนวนไฟล์ใบรับรองสูงสุดต่ออุปกรณ์
+const MAX_PDF_MB = 8;        // ขนาดไฟล์ PDF สูงสุด (MB) — รูปภาพจะถูกย่อให้อัตโนมัติก่อนอัปโหลด
+const FILE_CACHE = {};       // id -> { mime, base64 }
+const PDF_ICON = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><text x="12" y="17.2" text-anchor="middle" font-size="6.2" font-weight="700" fill="currentColor" stroke="none" font-family="Sarabun,sans-serif">PDF</text></svg>';
+const EDIT_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+const FILE_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>';
+
+let ATTACH_STATE = { photo: [], cert: [], removedIds: [] };
+let VIEWER_TOKEN = 0;
+
+/* ---------- โหลดไลบรารีเฉพาะตอนใช้งาน ---------- */
+const _libPromises = {};
+function loadScriptOnce(url){
+  if(_libPromises[url]) return _libPromises[url];
+  _libPromises[url] = new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = url;
+    s.onload = resolve;
+    s.onerror = ()=>{ delete _libPromises[url]; reject(new Error('โหลดไลบรารีไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต')); };
+    document.head.appendChild(s);
+  });
+  return _libPromises[url];
+}
+async function ensurePdfJs(){
+  await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  return window.pdfjsLib;
+}
+async function ensurePdfExportLibs(){
+  await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+}
+async function ensureFonts(){
+  try{
+    await document.fonts.load('600 40px Sarabun');
+    await document.fonts.load('400 16px Sarabun');
+    await document.fonts.ready;
+  }catch(e){}
+}
+
+/* ---------- ลายน้ำ: วาดลงบน canvas ตรงๆ (บันทึกรูปแล้วลายน้ำยังติดอยู่) ---------- */
+function drawWatermark(canvas){
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const fontSize = Math.max(16, Math.round(Math.min(w, h * 0.8) / 18));
+  ctx.save();
+  ctx.font = '600 ' + fontSize + 'px Sarabun, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = Math.max(2, fontSize / 12);
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  ctx.fillStyle = 'rgba(21,34,56,0.20)';
+  ctx.translate(w / 2, h / 2);
+  ctx.rotate(-Math.PI / 6);
+  const textW = ctx.measureText(WATERMARK_TEXT).width;
+  const stepX = textW + fontSize * 1.6;
+  const stepY = fontSize * 3.4;
+  const diag = Math.sqrt(w * w + h * h);
+  let row = 0;
+  for(let y = -diag; y <= diag; y += stepY, row++){
+    const shift = (row % 2) ? stepX / 2 : 0;
+    for(let x = -diag - stepX; x <= diag + stepX; x += stepX){
+      ctx.strokeText(WATERMARK_TEXT, x + shift, y);
+      ctx.fillText(WATERMARK_TEXT, x + shift, y);
+    }
+  }
+  ctx.restore();
+}
+
+function base64ToUint8(b64){
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+function loadImage(src){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=> resolve(img);
+    img.onerror = ()=> reject(new Error('เปิดไฟล์รูปภาพไม่ได้'));
+    img.src = src;
+  });
+}
+
+async function fetchFileData(id){
+  if(FILE_CACHE[id]) return FILE_CACHE[id];
+  const res = await fetch(SCRIPT_URL + '?action=getFile&id=' + encodeURIComponent(id));
+  const json = await res.json();
+  if(!json.ok) throw new Error(json.error || 'โหลดไฟล์ไม่สำเร็จ');
+  FILE_CACHE[id] = { mime: json.mime, base64: json.base64 };
+  return FILE_CACHE[id];
+}
+
+/* แปลงไฟล์แนบ 1 ไฟล์ เป็น canvas (PDF = 1 canvas ต่อ 1 หน้า) พร้อมลายน้ำ */
+async function renderAttachmentCanvases(att, opts){
+  opts = opts || {};
+  const maxWidth = opts.maxWidth || 1400;
+  const data = await fetchFileData(att.id);
+  const mime = data.mime || att.mime || '';
+  await ensureFonts();
+
+  if(mime === 'application/pdf'){
+    const pdfjs = await ensurePdfJs();
+    const doc = await pdfjs.getDocument({ data: base64ToUint8(data.base64) }).promise;
+    const n = Math.min(doc.numPages, opts.maxPages || 50);
+    const out = [];
+    for(let i = 1; i <= n; i++){
+      const page = await doc.getPage(i);
+      const base = page.getViewport({ scale: 1 });
+      const vp = page.getViewport({ scale: maxWidth / base.width });
+      const c = document.createElement('canvas');
+      c.width = Math.round(vp.width);
+      c.height = Math.round(vp.height);
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      drawWatermark(c);
+      out.push(c);
+    }
+    return { canvases: out, totalPages: doc.numPages };
+  }
+
+  const img = await loadImage('data:' + mime + ';base64,' + data.base64);
+  const scale = Math.min(1, maxWidth / img.naturalWidth, (opts.maxHeight || 2200) / img.naturalHeight);
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+  c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  drawWatermark(c);
+  return { canvases: [c], totalPages: 1 };
+}
+
+function sortedAttachments(item){
+  const atts = (item.attachments || []).slice();
+  return atts.filter(a => a.kind === 'photo').concat(atts.filter(a => a.kind !== 'photo'));
+}
+function attKindLabel(a){ return a.kind === 'photo' ? 'รูปภาพเครื่องมือ' : 'ใบรับรอง / เอกสาร'; }
+
+/* ---------- ช่อง "เอกสาร / รูปภาพ" ในตาราง ---------- */
+function attachCell(it){
+  const atts = it.attachments || [];
+  const photos = atts.filter(a => a.kind === 'photo').length;
+  const certs = atts.length - photos;
+  let html = '';
+  if(atts.length){
+    html += '<button class="att-view-btn" onclick="viewItemFiles(\'' + escAttr(it.__category) + '\',' + it.rowNumber + ')">' + FILE_ICON + ' เปิดดู</button>' +
+            '<div class="att-counts">รูปภาพ ' + photos + ' · ใบรับรอง ' + certs + '</div>';
+  }else{
+    html += '<span class="placeholder">ยังไม่มีไฟล์แนบ</span>';
+  }
+  if(it.adLink && /^https?:\/\//i.test(String(it.adLink))){
+    html += '<div class="att-legacy"><a href="' + escAttr(it.adLink) + '" target="_blank" rel="noopener">ลิงก์เดิม</a></div>';
+  }
+  return '<td class="att-cell">' + html + '</td>';
+}
+
+/* ---------- หน้าดูไฟล์ (ลายน้ำชื่อบริษัท) ---------- */
+function viewItemFiles(category, rowNumber){
+  const item = (RAW_DATA[category] || []).find(r => r.rowNumber === rowNumber);
+  if(!item) return;
+  openViewer(item.equipmentName || 'เอกสาร', sortedAttachments(item));
+}
+async function openViewer(title, atts){
+  const token = ++VIEWER_TOKEN;
+  document.getElementById('viewerTitle').textContent = title;
+  const body = document.getElementById('viewerBody');
+  body.innerHTML = '';
+  document.getElementById('viewerBackdrop').classList.add('open');
+
+  for(const a of atts){
+    if(token !== VIEWER_TOKEN) return; // ปิดหน้าต่างไปแล้ว
+    const sec = document.createElement('section');
+    sec.className = 'viewer-sec';
+    const cap = document.createElement('div');
+    cap.className = 'viewer-cap';
+    cap.textContent = attKindLabel(a) + ' — ' + a.name;
+    const holder = document.createElement('div');
+    holder.className = 'viewer-holder';
+    holder.textContent = 'กำลังโหลดไฟล์ ...';
+    sec.appendChild(cap);
+    sec.appendChild(holder);
+    body.appendChild(sec);
+    try{
+      const r = await renderAttachmentCanvases(a, { maxWidth: 1400, maxPages: 50 });
+      holder.textContent = '';
+      r.canvases.forEach(c => { c.className = 'viewer-canvas'; holder.appendChild(c); });
+    }catch(err){
+      holder.textContent = 'โหลดไฟล์ไม่สำเร็จ: ' + (err.message || err);
+      holder.classList.add('err');
+    }
+  }
+}
+function closeViewer(){
+  VIEWER_TOKEN++;
+  document.getElementById('viewerBackdrop').classList.remove('open');
+  document.getElementById('viewerBody').innerHTML = '';
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeViewer(); });
+
+/* ---------- ฟอร์ม: เลือก / แสดง / ลบ ไฟล์แนบ ---------- */
+function resetAttachState(existing){
+  ATTACH_STATE.photo.concat(ATTACH_STATE.cert).forEach(a => { if(a.previewUrl) URL.revokeObjectURL(a.previewUrl); });
+  ATTACH_STATE = { photo: [], cert: [], removedIds: [] };
+  (existing || []).forEach(a => {
+    (a.kind === 'photo' ? ATTACH_STATE.photo : ATTACH_STATE.cert).push({ id: a.id, name: a.name, mime: a.mime, kind: a.kind === 'photo' ? 'photo' : 'cert' });
+  });
+  renderAttachLists();
+}
+
+function onPickFiles(kind, input){
+  const msg = document.getElementById('formMsg');
+  msg.textContent = ''; msg.className = 'form-msg';
+  const max = kind === 'photo' ? MAX_PHOTOS : MAX_DOCS;
+  const list = ATTACH_STATE[kind];
+  const problems = [];
+  Array.from(input.files || []).forEach(f => {
+    const isImg = f.type.indexOf('image/') === 0;
+    const isPdf = f.type === 'application/pdf';
+    if(list.length >= max){ problems.push('เกินจำนวนสูงสุด ' + max + ' ไฟล์ — ข้าม "' + f.name + '"'); return; }
+    if(kind === 'photo' && !isImg){ problems.push('"' + f.name + '" ไม่ใช่ไฟล์รูปภาพ'); return; }
+    if(kind === 'cert' && !isImg && !isPdf){ problems.push('"' + f.name + '" ต้องเป็น PDF หรือรูปภาพ'); return; }
+    if(isPdf && f.size > MAX_PDF_MB * 1048576){ problems.push('"' + f.name + '" ใหญ่เกิน ' + MAX_PDF_MB + ' MB'); return; }
+    list.push({ pending: true, file: f, name: f.name, mime: f.type, kind, previewUrl: isImg ? URL.createObjectURL(f) : '' });
+  });
+  input.value = '';
+  if(problems.length){ msg.textContent = problems.join(' / '); msg.className = 'form-msg error'; }
+  renderAttachLists();
+}
+
+function removeAttach(kind, index){
+  const a = ATTACH_STATE[kind].splice(index, 1)[0];
+  if(!a) return;
+  if(a.pending){ if(a.previewUrl) URL.revokeObjectURL(a.previewUrl); }
+  else ATTACH_STATE.removedIds.push(a.id);
+  renderAttachLists();
+}
+
+function viewExistingAttach(kind, index){
+  const a = ATTACH_STATE[kind][index];
+  if(a && !a.pending) openViewer(a.name, [a]);
+}
+
+function renderAttachLists(){
+  ['photo', 'cert'].forEach(kind => {
+    const list = ATTACH_STATE[kind];
+    const max = kind === 'photo' ? MAX_PHOTOS : MAX_DOCS;
+    const box = document.getElementById('attList_' + kind);
+    if(!box) return;
+    box.innerHTML = list.map((a, i) => {
+      const thumb = a.previewUrl ? '<img src="' + escAttr(a.previewUrl) + '" alt="">' : (a.mime === 'application/pdf' ? 'PDF' : FILE_ICON);
+      return '<div class="att-item">' +
+        '<div class="att-thumb">' + thumb + '</div>' +
+        '<div class="att-name" title="' + escAttr(a.name) + '">' + esc(a.name) + '</div>' +
+        '<span class="att-tag' + (a.pending ? ' new' : '') + '">' + (a.pending ? 'ยังไม่อัปโหลด' : 'อยู่ใน Drive') + '</span>' +
+        (a.pending ? '' : '<button class="view" type="button" onclick="viewExistingAttach(\'' + kind + '\',' + i + ')">ดู</button>') +
+        '<button type="button" title="ลบไฟล์นี้" onclick="removeAttach(\'' + kind + '\',' + i + ')">&times;</button>' +
+      '</div>';
+    }).join('');
+    const cnt = document.getElementById('attCount_' + kind);
+    if(cnt) cnt.textContent = '(' + list.length + '/' + max + ')';
+    const btn = document.getElementById('attBtn_' + kind);
+    if(btn) btn.classList.toggle('disabled', list.length >= max);
+  });
+}
+
+/* ---------- อัปโหลดไป Google Drive ---------- */
+function compressImage(file, maxSide, quality){
+  return new Promise((resolve, reject)=>{
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{
+      const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', quality).split(',')[1]);
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('อ่านไฟล์รูปภาพไม่ได้: ' + file.name)); };
+    img.src = url;
+  });
+}
+function fileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(String(r.result).split(',')[1]);
+    r.onerror = ()=> reject(new Error('อ่านไฟล์ไม่ได้: ' + file.name));
+    r.readAsDataURL(file);
+  });
+}
+async function uploadAttachment(category, a){
+  const f = a.file;
+  let base64, mime, filename;
+  if(f.type.indexOf('image/') === 0){
+    base64 = await compressImage(f, 2000, 0.85);
+    mime = 'image/jpeg';
+    filename = f.name.replace(/\.[^.]+$/, '') + '.jpg';
+  }else{
+    base64 = await fileToBase64(f);
+    mime = f.type;
+    filename = f.name;
+  }
+  const res = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'uploadFile', category, filename, mimeType: mime, base64 })
+  });
+  const json = await res.json();
+  if(!json.ok) throw new Error(json.error || 'อัปโหลดไม่สำเร็จ: ' + f.name);
+  return { id: json.id, name: filename, mime: json.mime, kind: a.kind };
+}
+
+/* ============== Export PDF (ต่อ 1 อุปกรณ์) ============== */
+function showBusy(text){
+  document.getElementById('busyText').textContent = text;
+  document.getElementById('busyOverlay').classList.add('open');
+}
+function setBusy(text){ document.getElementById('busyText').textContent = text; }
+function hideBusy(){ document.getElementById('busyOverlay').classList.remove('open'); }
+
+function buildReportHtml(item, category, attPages){
+  const st = getStatus(item);
+  const logo = document.getElementById('logoImg').src;
+  const now = new Date().toLocaleString('th-TH');
+  const dash = v => (v === '' || v === null || typeof v === 'undefined') ? '-' : esc(v);
+  const rows = [
+    ['ชื่อเครื่องมือ', item.equipmentName], ['หมวดหมู่', category],
+    ['เลขทะเบียน (ID Number)', item.idNumber], ['เลขเครื่องมือ (Serial No.)', item.serialNo],
+    ['ยี่ห้อ / รุ่น', [item.brand, item.model].filter(Boolean).join(' / ')],
+    ['ผู้ใช้งาน', item.user], ['สถานที่ใช้', item.location],
+    ['ความถี่สอบเทียบ', item.internal || item.external],
+    ['ช่วงการใช้งาน (Range)', item.range], ['ค่าความละเอียด', item.resolution], ['เกณฑ์การยอมรับ', item.tolerance],
+    ['วันที่สอบเทียบ', item.calDate], ['วันหมดอายุ', item.expireDate],
+    ['สอบเทียบโดย', item.calibratedBy], ['เลขที่ใบรับรอง', item.certificateNo],
+    ['อุปกรณ์สอบเทียบหลัก', item.masterEquipment], ['หมายเหตุ', item.remark]
+  ];
+  const atts = sortedAttachments(item);
+  const photos = atts.filter(a => a.kind === 'photo').length;
+  const total = 1 + attPages.length;
+
+  let html = '<div class="rp-page">' +
+    '<div class="rp-head"><img src="' + logo + '" alt=""><div>' +
+      '<div class="rp-co">บริษัท เบสท์ เพอร์ฟอร์แมนซ์ เอ็นจิเนียริ่ง จำกัด</div>' +
+      '<div class="rp-co-en">Best Performance Engineering Company Limited</div></div></div>' +
+    '<div class="rp-title">ข้อมูลการสอบเทียบเครื่องมือ</div>' +
+    '<div class="rp-sub">Calibration Equipment Record</div>' +
+    '<div class="rp-badge ' + st.key + '">' + esc(st.label) + '</div>' +
+    '<table class="rp-table">' + rows.map(r => '<tr><td class="k">' + r[0] + '</td><td>' + dash(r[1]) + '</td></tr>').join('') + '</table>' +
+    '<div class="rp-note">เอกสารแนบ: รูปภาพเครื่องมือ ' + photos + ' ไฟล์ · ใบรับรอง/เอกสาร ' + (atts.length - photos) + ' ไฟล์' +
+      (atts.length ? ' (แสดงในหน้าถัดไป พร้อมลายน้ำ)' : '') + '</div>' +
+    '<div class="rp-foot"><span>พิมพ์เมื่อ ' + esc(now) + '</span><span>หน้า 1 / ' + total + '</span></div>' +
+  '</div>';
+
+  attPages.forEach((p, i) => {
+    html += '<div class="rp-page">' +
+      '<div class="rp-cap">' + esc(p.caption) + '</div>' +
+      '<div class="rp-imgwrap"><img src="' + p.dataUrl + '" alt=""></div>' +
+      '<div class="rp-foot"><span>' + esc(item.equipmentName || '') + (item.idNumber ? ' · ' + esc(item.idNumber) : '') + '</span><span>หน้า ' + (i + 2) + ' / ' + total + '</span></div>' +
+    '</div>';
+  });
+  return html;
+}
+
+async function exportItemPdf(category, rowNumber){
+  const item = (RAW_DATA[category] || []).find(r => r.rowNumber === rowNumber);
+  if(!item){ showToast('ไม่พบรายการนี้ ลองรีเฟรชข้อมูลใหม่อีกครั้ง'); return; }
+
+  showBusy('กำลังเตรียมสร้าง PDF ...');
+  const stage = document.getElementById('pdfStage');
+  try{
+    await ensurePdfExportLibs();
+    await ensureFonts();
+
+    // 1) รูปภาพ + ใบรับรอง -> ภาพที่ใส่ลายน้ำแล้ว
+    const attPages = [];
+    const atts = sortedAttachments(item);
+    for(let i = 0; i < atts.length; i++){
+      const a = atts[i];
+      setBusy('กำลังเตรียมไฟล์แนบ ' + (i + 1) + '/' + atts.length + ' : ' + a.name);
+      const r = await renderAttachmentCanvases(a, { maxWidth: 1500, maxPages: 10 });
+      r.canvases.forEach((c, idx) => {
+        let pageNote = r.totalPages > 1 ? ' (หน้า ' + (idx + 1) + '/' + r.totalPages + ')' : '';
+        if(idx === r.canvases.length - 1 && r.totalPages > r.canvases.length) pageNote += ' · แสดง ' + r.canvases.length + ' หน้าแรกจากทั้งหมด ' + r.totalPages + ' หน้า';
+        attPages.push({ caption: attKindLabel(a) + ' — ' + a.name + pageNote, dataUrl: c.toDataURL('image/jpeg', 0.88) });
+      });
+    }
+    const goodPages = attPages;
+
+    // 2) สร้างหน้ารายงานนอกจอ
+    stage.innerHTML = buildReportHtml(item, category, goodPages);
+    await Promise.all(Array.from(stage.querySelectorAll('img')).map(img => img.decode ? img.decode().catch(()=>{}) : Promise.resolve()));
+    await new Promise(r => setTimeout(r, 150));
+
+    // 3) แปลงทีละหน้าเป็นภาพ แล้วรวมเป็น PDF (A4)
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const pages = Array.from(stage.querySelectorAll('.rp-page'));
+    for(let i = 0; i < pages.length; i++){
+      setBusy('กำลังสร้างหน้า PDF ' + (i + 1) + '/' + pages.length + ' ...');
+      const canvas = await window.html2canvas(pages[i], { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
+      if(i > 0) pdf.addPage();
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
+    }
+
+    const safe = String(item.idNumber || item.equipmentName || 'equipment').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 60);
+    pdf.save('Calibration_' + safe + '.pdf');
+    showToast('สร้างไฟล์ PDF เรียบร้อยแล้ว');
+  }catch(err){
+    showToast('สร้าง PDF ไม่สำเร็จ: ' + (err.message || err));
+  }finally{
+    stage.innerHTML = '';
+    hideBusy();
+  }
+}
+
+/* ============== helpers ============== */
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function escAttr(s){ return esc(s).replace(/'/g, '&#39;'); }
+function slug(s){ return String(s).replace(/[^a-zA-Z0-9ก-๙]/g,'_'); }
+function shorten(url){
+  const s = String(url);
+  return s.length > 34 ? s.slice(0,31) + '...' : s;
+}
+
+populateCategorySelect();
+loadData();
+</script>
+
+</body>
+</html>
